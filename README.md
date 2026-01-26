@@ -87,14 +87,14 @@ We are constantly looking to improve the **UNITAS** framework. Whether you're a 
 # <h1 align="center"> Connect With The Team! </h1>
   
 <p align="center">
-<a href="https://github.com/AbigailAnnSarmiento"><img src="https://img.shields.io/badge/GitHub-Abigail--Ann--Sarmiento-181717?style=social&logo=github" alt="Abigail Ann Sarmiento"></a>
+<a href="https://github.com/aasarmiento"><img src="https://img.shields.io/badge/GitHub-aasarmiento-181717?style=social&logo=github" alt="Abigail Ann Sarmiento GitHub"></a>
 
 <p align="center">
-<a href="https://github.com/JohnJoshuaNikeMizal"><img src="https://img.shields.io/badge/GitHub-John--Joshua--Nike--Mizal-181717?style=social&logo=github" alt="John Joshua Nike Mizal"></a>
+<a href="https://github.com/john-joshua-m"><img src="https://img.shields.io/badge/GitHub-john--joshua--m-181717?style=social&logo=github" alt="John Joshua Nike Mizal GitHub"></a>
 
 <p align="center">
-<a href="https://github.com/PiaMakiling"><img src="https://img.shields.io/badge/GitHub-Pia--Makiling-181717?style=social&logo=github" alt="Pia Makiling"></a>
+<a href="https://github.com/lr-pmakiling"><img src="https://img.shields.io/badge/GitHub-lr--pmakiling-181717?style=social&logo=github" alt="Pia Makiling GitHub"></a>
 
 <p align="center">
-<a href="https://github.com/JonalynTumpong"><img src="https://img.shields.io/badge/GitHub-Jonalyn--Tumpong-181717?style=social&logo=github" alt="Jonalyn Tumpong"></a>
+<a href="https://github.com/jonalynt"><img src="https://img.shields.io/badge/GitHub-jonalynt-181717?style=social&logo=github" alt="Jonalyn Tumpong GitHub"></a>
 
