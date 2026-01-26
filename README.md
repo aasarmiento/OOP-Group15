@@ -8,19 +8,40 @@
 
   -----
 
-# Meet The UNITAS Team👋 
-<p align="center">
-🏗️ Lead Architect / Backend</b> | <img src="https://img.shields.io/badge/ABIGAIL_ANN_SARMIENTO-001F3F?style=for-the-badge" alt="Abigail Name"> <a href="https://github.com/aasarmiento"><img src="https://img.shields.io/badge/GitHub-aasarmiento-181717?style=social&logo=github"></a>
-
-<p align="center">
-🎨 UI/UX Designer / Frontend</b> | <img src="https://img.shields.io/badge/JOHN_JOSHUA_NIKE_MIZAL-4A0E0E?style=for-the-badge" alt="John Name"> <a href="https://github.com/john-joshua-m"><img src="https://img.shields.io/badge/GitHub-john--joshua--m-181717?style=social&logo=github"></a>
-
-<p align="center">
-📋 Documentation & QA</b> | <img src="https://img.shields.io/badge/PIA_MAKILING-1A1A1A?style=for-the-badge" alt="Pia Name"> <a href="https://github.com/lr-pmakiling"><img src="https://img.shields.io/badge/GitHub-lr--pmakiling-181717?style=social&logo=github"></a>
-
-
-<p align="center">
-🔗 Systems Integration</b> | <img src="https://img.shields.io/badge/JONALYN_TUMPONG-0B2010?style=for-the-badge" alt="Jonalyn Name"> <a href="https://github.com/jonalynt"><img src="https://img.shields.io/badge/GitHub-jonalynt-181717?style=social&logo=github"></a> </p>
+<h1 align="center"> Meet The Unitas Team👋 </h1>
+<div align="center">
+<table style="width:100%; text-align:center;">
+  <thead>
+    <tr>
+      <th align="center">Role</th>
+      <th align="center">Name</th>
+      <th align="center">GitHub Profile</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="left">🏗️ <b>Lead Architect / Backend</b></td>
+      <td align="center"><img src="https://img.shields.io/badge/ABIGAIL_ANN_SARMIENTO-001F3F?style=for-the-badge" height="25"></td>
+      <td align="center"><a href="https://github.com/aasarmiento"><img src="https://img.shields.io/badge/GitHub-aasarmiento-181717?style=social&logo=github" height="25"></a></td>
+    </tr>
+    <tr>
+      <td align="left">🎨 <b>UI/UX Designer / Frontend</b></td>
+      <td align="center"><img src="https://img.shields.io/badge/JOHN_JOSHUA_NIKE_MIZAL-4A0E0E?style=for-the-badge" height="25"></td>
+      <td align="center"><a href="https://github.com/john-joshua-m"><img src="https://img.shields.io/badge/GitHub-john--joshua--m-181717?style=social&logo=github" height="25"></a></td>
+    </tr>
+    <tr>
+      <td align="left">📋 <b>Documentation & QA</b></td>
+      <td align="center"><img src="https://img.shields.io/badge/PIA_MAKILING-1A1A1A?style=for-the-badge" height="25"></td>
+      <td align="center"><a href="https://github.com/lr-pmakiling"><img src="https://img.shields.io/badge/GitHub-lr--pmakiling-181717?style=social&logo=github" height="25"></a></td>
+    </tr>
+    <tr>
+      <td align="left">🔗 <b>Systems Integration</b></td>
+      <td align="center"><img src="https://img.shields.io/badge/JONALYN_TUMPONG-0B2010?style=for-the-badge" height="25"></td>
+      <td align="center"><a href="https://github.com/jonalynt"><img src="https://img.shields.io/badge/GitHub-jonalynt-181717?style=social&logo=github" height="25"></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 -----
 
