@@ -10,16 +10,17 @@
 
 # Meet The UNITAS Team👋 
 <p align="center">
-🏗️ Lead Architect / Backend: ABIGAIL ANN SARMIENTO
+🏗️ Lead Architect / Backend</b> | <img src="https://img.shields.io/badge/ABIGAIL_ANN_SARMIENTO-001F3F?style=for-the-badge" alt="Abigail Name"> <a href="https://github.com/aasarmiento"><img src="https://img.shields.io/badge/GitHub-aasarmiento-181717?style=social&logo=github"></a>
 
 <p align="center">
-🎨 UI/UX Designer / Frontend: JOHN JOSHUA NIKE MIZAL
+🎨 UI/UX Designer / Frontend</b> | <img src="https://img.shields.io/badge/JOHN_JOSHUA_NIKE_MIZAL-4A0E0E?style=for-the-badge" alt="John Name"> <a href="https://github.com/john-joshua-m"><img src="https://img.shields.io/badge/GitHub-john--joshua--m-181717?style=social&logo=github"></a>
 
 <p align="center">
-📋 Documentation & QA: PIA MAKILING
+📋 Documentation & QA</b> | <img src="https://img.shields.io/badge/PIA_MAKILING-1A1A1A?style=for-the-badge" alt="Pia Name"> <a href="https://github.com/lr-pmakiling"><img src="https://img.shields.io/badge/GitHub-lr--pmakiling-181717?style=social&logo=github"></a>
+
 
 <p align="center">
-🔗 Systems Integration: JONALYN TUMPONG
+🔗 Systems Integration</b> | <img src="https://img.shields.io/badge/JONALYN_TUMPONG-0B2010?style=for-the-badge" alt="Jonalyn Name"> <a href="https://github.com/jonalynt"><img src="https://img.shields.io/badge/GitHub-jonalynt-181717?style=social&logo=github"></a> </p>
 
 -----
 
@@ -74,7 +75,6 @@ The project is currently in the OOP Refactoring Phase. We are moving away from m
   ## 6️⃣ Feedback & Collaboration
 We are constantly looking to improve the **UNITAS** framework. Whether you're a fellow student or a developer, we welcome your input!
 
-* **💡 Feature Requests:** Open a [Discussion](link) to suggest new OOP patterns.
 * **📋 Survey:** Provide formal feedback via our [Google Form](https://forms.gle/Z3HVe4BSkWpnwWRT8).
 
 -----
@@ -84,17 +84,4 @@ We are constantly looking to improve the **UNITAS** framework. Whether you're a 
 
 -----
 
-# <h1 align="center"> Connect With The Team! </h1>
-  
-<p align="center">
-<a href="https://github.com/aasarmiento"><img src="https://img.shields.io/badge/GitHub-aasarmiento-181717?style=social&logo=github" alt="Abigail Ann Sarmiento GitHub"></a>
-
-<p align="center">
-<a href="https://github.com/john-joshua-m"><img src="https://img.shields.io/badge/GitHub-john--joshua--m-181717?style=social&logo=github" alt="John Joshua Nike Mizal GitHub"></a>
-
-<p align="center">
-<a href="https://github.com/lr-pmakiling"><img src="https://img.shields.io/badge/GitHub-lr--pmakiling-181717?style=social&logo=github" alt="Pia Makiling GitHub"></a>
-
-<p align="center">
-<a href="https://github.com/jonalynt"><img src="https://img.shields.io/badge/GitHub-jonalynt-181717?style=social&logo=github" alt="Jonalyn Tumpong GitHub"></a>
-
+<h1 align="center"> MO-IT110 - Object-oriented Programming </h1>
