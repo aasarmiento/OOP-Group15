@@ -1,6 +1,6 @@
 # <h1 align="center"> HELLO, WORLD! </h1>
 <p align="center">
-  <img width="4000" height="2250" alt="MotorPH Evolution (1)" src="https://github.com/user-attachments/assets/f999e44d-6acc-495d-b2c3-b705e6362c6e" />
+  <img width="4000" height="2250" alt="MotorPH Evolution (2)" src="https://github.com/user-attachments/assets/a0cec822-fc98-4a3d-ad88-fd572881a8d6" />
 
 <h1 align="center"> About Us: </h1>
 <p align="together"> UNITAS marks the architectural rebirth of the MotorPH Payroll System, led by a team of IT students from Mapua Malayan Digital College taking Object-Oriented Programming subject. This project represents our transition from procedural scripts to professional object-oriented design, refactoring legacy code into a sophisticated network of resilient classes. By untangling early development "growing pains," we are transforming "working code" into a scalable, high-integrity engine engineered for the future of enterprise integration.
