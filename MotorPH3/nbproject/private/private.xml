@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/motorph3/MotorPH3.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/Employee.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/Admin.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/HRStaff.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/RegularStaff.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/service/PayrollSystem.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/service/PayrollCalculator.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/dao/CSVHandler.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/dao/LogHandler.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/ui/DashboardPanel.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/ui/LoginScreen.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/IUserOperations.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/IPayrollCalculations.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/IHROperations.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/IFinanceOperations.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/IAdminOperations.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/Payslip.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/AccountingStaff.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/SummaryData.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/LeaveRequest.java</file>
+            <file>file:/Users/abigail/NetBeansProjects/MotorPH3/src/model/Role.java</file>
+        </group>
+    </open-files>
+</project-private>

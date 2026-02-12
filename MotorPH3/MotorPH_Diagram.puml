@@ -1,0 +1,22 @@
+@startuml
+abstract class Employee {
+    # String empNo
+    # String lastName
+    {abstract} + login()
+}
+
+interface IHROperations {
+    + approveLeaveRequest()
+}
+
+class HRStaff extends Employee implements IHROperations {
+    + getRole()
+}
+
+class Admin extends Employee {
+    + createEmployee()
+}
+
+Employee <|-- HRStaff
+Employee <|-- Admin
+@enduml
