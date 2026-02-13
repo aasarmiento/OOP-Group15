@@ -54,7 +54,7 @@ The project is currently in the OOP Refactoring Phase. We are moving away from m
 -----
 
 # Navigation Guide🧭
-1️⃣ Clone this repository
+1️⃣ Clone this repository https://github.com/aasarmiento/OOP-Group15.git
 
     • git clone
 
@@ -62,7 +62,7 @@ The project is currently in the OOP Refactoring Phase. We are moving away from m
 
     • Open NetBeans and select File > Open Project.
   
-    • Navigate to the cloned repository directory (To be posted) and open the project.
+    • Navigate to the cloned repository directory and open the project.
   
     • Ensure the opencsv.jar library is added to the project’s libraries (if not already included).
 
