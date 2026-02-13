@@ -54,9 +54,9 @@ The project is currently in the OOP Refactoring Phase. We are moving away from m
 -----
 
 # Navigation Guide🧭
-1️⃣ Clone this repository https://github.com/aasarmiento/OOP-Group15.git
+1️⃣ Clone this repository 
 
-    • git clone
+    • git clone: https://github.com/aasarmiento/OOP-Group15.git
 
 2️⃣ Open in NetBeans  
 
