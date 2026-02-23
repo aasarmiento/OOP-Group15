@@ -13,5 +13,5 @@ public enum Role {
     ADMIN,
     ACCOUNTING,
     REGULAR_STAFF,
-    ITStaff
+    IT_STAFF
 }

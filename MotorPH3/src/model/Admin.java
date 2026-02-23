@@ -1,7 +1,6 @@
 package model;
 
 import java.time.LocalDate;
-
 import service.PayrollCalculator;
 
 
@@ -166,5 +165,14 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
         super(id, last, first, bday); // Sends 4 params to Employee.java
         this.basicSalary = basic;     // Sets the 5th param in the protected field
     }
+
+/* 
+        public Admin(int id, String last, String first, LocalDate bday, double basic) {
+        super(id, last, first, bday); // Sends 4 params to Employee.java
+        this.basicSalary = basic;     // Sets the 5th param in the protected field
+    }
+        
+    */
+    
     
 }
