@@ -1,0 +1,8 @@
+Employee #,Last Name,First Name,Start Date,End Date,Reason,Status
+10034,Santos,Beatriz,02/09/2026,02/15/2026,"sick leave",Pending
+10034,Santos,Beatriz,Sick Leave,02/01/2026,02/14/2026,"Im very sick thank you for understanding ",Approved
+10034,Santos,Beatriz,Maternity Leave,02/14/2026,02/28/2026,"manganganak na",Approved
+10034,Santos,Beatriz,Vacation Leave,02/13/2026,02/21/2026,"pupunta po ng japan para selfcare",Declined
+10034,Santos,Beatriz,Vacation Leave,02/13/2026,02/22/2026,"punta po korea",Declined
+10034,Santos,Beatriz,Vacation Leave,02/01/2026,02/27/2026,"punta po ng koreaaaa magkimchi",Approved
+10034,Santos,Beatriz,Maternity Leave,02/13/2026,02/22/2026,"manganganak na",Declined

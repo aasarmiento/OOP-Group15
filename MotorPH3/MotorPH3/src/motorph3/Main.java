@@ -1,6 +1,6 @@
-package motorph3; // Or whatever your base package is named
+package motorph3; 
 
-import ui.LoginPanel; // Import the LoginPanel
+import ui.LoginPanel; 
 
 public class Main {
     public static void main(String[] args) {

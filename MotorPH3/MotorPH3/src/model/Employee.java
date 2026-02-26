@@ -33,6 +33,7 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
     protected double grossRate;
     protected double hourlyRate;
     private double grossSemiMonthlyRate;
+    private String photoPath;
 
     
 
@@ -164,6 +165,10 @@ public double getGrossSemiMonthlyRate() {
         return grossSemiMonthlyRate;
     }
 
+    public String getPhotoPath() { 
+        return photoPath; 
+    }
+
     // --- Setters ---
 
     public void setEmpNo(int empNo) {
@@ -246,6 +251,9 @@ public double getGrossSemiMonthlyRate() {
     this.password = password;
 }
 
+public void setPhotoPath(String photoPath) {
+     this.photoPath = photoPath;
+     }
     // --- IUserOperations ---
 
 

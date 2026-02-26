@@ -141,21 +141,32 @@ public class LoginPanel extends JFrame {
 private void openDashboard(Role role, Employee user) {
     this.dispose(); 
     
-    // Get position for the Accounting check (Bianca/Roderick)
+    // Get position safely for department checks
     String pos = (user.getPosition() != null) ? user.getPosition().toLowerCase() : "";
     
-    // 1. Check for Accounting first (Since they are marked 'Admin' in your CSV)
+    // 1. PRIORITY #1: Finance / Accounting / Payroll
     if (pos.contains("accounting") || pos.contains("payroll") || pos.contains("finance")) {
+        System.out.println("Routing to AccountingDashboard...");
         new AccountingDashboard(myHandler, user).setVisible(true);
         return; 
     }
 
-    // 2. Use the Role from your new CSV AccessLevel column
+    // 2. PRIORITY #2: IT Department
+    if (pos.contains("it") || pos.contains("information technology") || role == Role.IT_STAFF) {
+        System.out.println("Access Level IT detected. Opening ITDashboard...");
+        new ITDashboard(myHandler, user).setVisible(true);
+        return; 
+    }
+
+    // 3. PRIORITY #3: HR Department
+    if (pos.contains("hr") || role == Role.HR_STAFF) {
+        System.out.println("Access Level HR detected. Opening HRDashboard...");
+        new HRDashboard(myHandler, user).setVisible(true);
+        return;
+    }
+
+    // 4. Default Role-based routing
     switch (role) {
-        case HR_STAFF -> {
-            System.out.println("Access Level HR detected. Opening HRDashboard...");
-            new HRDashboard(myHandler, user).setVisible(true);
-        }
         case ADMIN -> {
             System.out.println("Access Level Admin detected. Opening AdminDashboard...");
             new AdminDashboard(myHandler, user).setVisible(true);
@@ -163,9 +174,13 @@ private void openDashboard(Role role, Employee user) {
         case IT_STAFF -> {
             new ITDashboard(myHandler, user).setVisible(true);
         }
+        case HR_STAFF -> {
+            new HRDashboard(myHandler, user).setVisible(true);
+        }
         default -> {
-            MainDashboard generalDash = new MainDashboard(myHandler, user);
-            generalDash.render();
+            // FIXED: Now opens your new RegularStaffDashboard
+            System.out.println("Opening Regular Staff Dashboard...");
+            new RegularStaffDashboard(myHandler, user).setVisible(true);
         }
     }
 }

@@ -33,7 +33,6 @@ public class AddEmployeePanel extends JPanel {
     private final JTextField grossRate = new JTextField();
     private final JTextField hourlyRate = new JTextField();
 
-    // 3. FIXED CONSTRUCTOR: Must match the call in MainDashboard
     public AddEmployeePanel(EmployeeDAO dao) {
         this.dao = dao;
         
@@ -98,7 +97,7 @@ public class AddEmployeePanel extends JPanel {
     }
 
     private int getLastEmployeeNumber() {
-        // Logic to find the highest ID
+        
         int maxEmpNo = 10000;
         String path = "resources/MotorPH_EmployeeData.csv"; 
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
