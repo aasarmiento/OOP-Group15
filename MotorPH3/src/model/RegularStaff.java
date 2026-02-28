@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 public class RegularStaff extends Employee {
 
-    // --- Constructors ---
+    
     public RegularStaff() {
         super();
     }
@@ -27,15 +27,28 @@ public class RegularStaff extends Employee {
     public double calculateGrossSalary() {
         double basePay = this.hourlyRate * calculateTotalHoursWorked();
 
-        // Polymorphic Logic: Probationary staff only get base pay (no allowances)
+       
         if ("Probationary".equalsIgnoreCase(this.getStatus())) {
             return basePay;
         } 
-        // Regular staff get the full package (Inherited from Parent variables)
+        
         return basePay + this.riceSubsidy + this.phoneAllowance + this.clothingAllowance;
     }
+    
+    @Override
+    public double calculateSalary() {
+        
+        return calculateSahod(); 
+    }
 
-    // --- Implementation of Required IUserOperations ---
+    
+    @Override
+    public double calculateSahod() {
+        
+        return calculateNetPay();
+    }
+
+   
 
     @Override
     public Role getRole() {
@@ -44,15 +57,14 @@ public class RegularStaff extends Employee {
 
     @Override
     public boolean isPasswordValid(String pass) {
-        // Validation Rule: password must be longer than 8 characters
+        
         return pass != null && pass.length() >= 8;
     }
 
-    // --- ILeaveOperations (Concrete Implementation) ---
-
+    
     @Override
     public LeaveRequest applyLeave(String type, LocalDate start, LocalDate end) {
-        // CRC: Auto-initializes status to PENDING
+       
         LeaveRequest request = new LeaveRequest(this.getEmpNo(), 
                                this.getFirstName() + " " + this.getLastName(), 
                                start, end);
@@ -60,9 +72,7 @@ public class RegularStaff extends Employee {
         return request;
     }
 
-    // --- Cleanup: Inheriting from Parent ---
-    // Note: We DELETE calculatePhilHealth(), calculateSSSDeduction(), etc. 
-    // because the Parent (Employee) now handles them using the static PayrollCalculator!
+    
 
     public RegularStaff(int id, String last, String first, LocalDate bday, double basic) {
     super(id, last, first, bday);

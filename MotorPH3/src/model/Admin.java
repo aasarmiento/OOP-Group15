@@ -1,7 +1,6 @@
 package model;
 
 import java.time.LocalDate;
-
 import service.PayrollCalculator;
 
 
@@ -33,13 +32,13 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
 
    @Override
     public double calculatePhilHealth() {
-        // This will now work perfectly because getPhilHealthDeduction is STATIC
+       
         return PayrollCalculator.getPhilHealthDeduction(this.basicSalary);
     }
 
     @Override
     public double calculatePagIBIG() {
-        // Static call - no 'new' needed
+       
         return PayrollCalculator.getPagIBIGDeduction();
     }
 
@@ -61,23 +60,36 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
         return calculateGrossSalary() - (computeDeductions() + calculateWithholdingTax());
     }
 
+   /**
+     * THE SYSTEM ENTRY POINT (The Waiter)
+     * Stays consistent across all classes for the UI to call.
+     */
     @Override
-    public void calculateSalary() {
-        // Displays the final result for the Admin/Executive
-        System.out.println("Processing Executive Payroll: " + this.firstName + " " + this.lastName);
-        System.out.println("Net Pay: " + calculateNetPay());
+    public double calculateSalary() {
+        // We can add a "Log" here in the parent if needed later
+        return calculateSahod(); 
     }
+
+    
+    @Override
+    public double calculateSahod() {
+        double managementAllowance = 5000.0;
+        
+       
+        return calculateNetPay() + managementAllowance;
+    }
+
     // --- iimplement na si  IAdminOperations ---
     
     @Override
     public void createEmployee(Employee emp) {
-        // Now that empNo is an int, it will likely default to 0 if not set
+       
         System.out.println("Admin is creating record for ID: " + emp.getEmpNo());
     }
 
     @Override
     public int generateNextEmpNo() {
-        // Standard Auto-increment logic
+      
         return 0; 
     }
 
@@ -114,7 +126,7 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
         return Role.ADMIN;
     }
 
-    // Gemini: Fixed - Added (String pass) to match Parent/Interface
+   
     @Override 
     public boolean isPasswordValid(String pass) { 
         return pass != null && pass.length() >= 8; 
@@ -125,9 +137,7 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
 
     // --- Implementation of IPayrollCalculations ---
     
-    // Gemini: These are now handled by the Employee parent class using PayrollCalculator.
-    // You can remove these overrides if you want them to use the standard logic, 
-    // or keep them if Admin has a very specific unique calculation.
+   
 
     
     
@@ -161,7 +171,7 @@ public class Admin extends Employee implements IAdminOperations, ILeaveOperation
         System.out.println("Admin AUTHORITY: Request " + request.getRequestId() + " updated to " + newStatus);
     }
 
-    // 2. ADD THIS 5-PARAMETER CONSTRUCTOR:
+   
     public Admin(int id, String last, String first, LocalDate bday, double basic) {
         super(id, last, first, bday); // Sends 4 params to Employee.java
         this.basicSalary = basic;     // Sets the 5th param in the protected field

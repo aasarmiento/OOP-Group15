@@ -10,20 +10,19 @@ import java.time.LocalDate;
 
 public class LeaveRequest {
     
-    private String requestId;           //  "LR-EMP001-1734567890123"
-
-    // Who requested it
+    private String requestId;         
+    
     private String empID;               
-    // Leave period
+   
     private LocalDate startDate;
     private LocalDate endDate;
 
-    // Type and reason
-    private String leaveType;           //  "Vacation", "Sick", "Emergency", "Maternity"
-    private String reason;              // Employee's explanation
+ 
+    private String leaveType;           
+    private String reason;              
 
-    // Status & approval info
-    private String status;              // "PENDING", "APPROVED", "REJECTED"
+   
+    private String status;             
     private final LocalDate submittedDate;   
     private LocalDate approvalDate;     
     private String approvedBy;          

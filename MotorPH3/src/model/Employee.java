@@ -10,6 +10,7 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
     // attributes this is the parent class lahat ng andto dapat mayron ang lahat ng employee regarless anong role 
     
     protected int empNo;
+    private String password;
     protected String lastName;
     protected String firstName;
     protected LocalDate birthday;
@@ -24,20 +25,29 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
     protected String position;
     protected String supervisor;
     
-    // Protected financial fields satisfy the "Internal Firewall" CRC requirement.
+    // Protected financial fields 
     protected double basicSalary;
     protected double riceSubsidy;
     protected double phoneAllowance;
     protected double clothingAllowance;
     protected double grossRate;
     protected double hourlyRate;
+    private double grossSemiMonthlyRate;
+    private String photoPath;
+
+    
 
     protected List<LeaveRequest> leaveRequests = new ArrayList<>();
 
     public Employee () {}
 
-    public Employee (int empNo, String lastName, String firstName, LocalDate birthday, String address, String phone, String sss, String philhealth, String tin, String pagibig, String status, String position, String supervisor, double basicSalary, double riceSubsidy, double phoneAllowance, double clothingAllowance, double grossRate, double hourlyRate) {
-        // Using the constructor for "Active Management" of the object's initial state.
+    public Employee (int empNo, String lastName, String firstName, LocalDate birthday, 
+                    String address, String phone, String sss, String philhealth, 
+                    String tin, String pagibig, String status, String position, 
+                    String supervisor, double basicSalary, double riceSubsidy, 
+                    double phoneAllowance, double clothingAllowance, 
+                    double grossRate, double hourlyRate) {
+        // constructors
         this.empNo = empNo;
         this.lastName = lastName;
         this.firstName = firstName;
@@ -55,12 +65,12 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
         this.riceSubsidy = riceSubsidy;
         this.phoneAllowance = phoneAllowance;
         this.clothingAllowance = clothingAllowance;
-        this.grossRate = grossRate;
+        this.grossRate = grossRate; // This is grossRate
         this.hourlyRate = hourlyRate;
+        this.grossSemiMonthlyRate = grossRate; // Logic fix: Assign grossRate to the private field
     }
 
-    // --- 2. SHORT CONSTRUCTOR (4 Params) ---
-    // Used by the DAO to fix the "no suitable constructor" error.
+   
     public Employee(int empNo, String lastName, String firstName, LocalDate birthday) {
         this.empNo = empNo;
         this.lastName = lastName;
@@ -86,7 +96,7 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
          }
 
     public String getAddress() {
-         return this.address;
+         return this.birthday != null ? this.address : ""; // Safe check
          }
 
     public String getPhone() {
@@ -144,6 +154,20 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
     public double getHourlyRate() {
          return this.hourlyRate; 
         }
+
+       
+        public String getStoredPassword() {
+    return this.password; 
+
+    
+}
+public double getGrossSemiMonthlyRate() {
+        return grossSemiMonthlyRate;
+    }
+
+    public String getPhotoPath() { 
+        return photoPath; 
+    }
 
     // --- Setters ---
 
@@ -223,49 +247,65 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
          this.hourlyRate = hourlyRate;
          }
 
+         public void setPassword(String password) {
+    this.password = password;
+}
+
+public void setPhotoPath(String photoPath) {
+     this.photoPath = photoPath;
+     }
     // --- IUserOperations ---
-    @Override
-    public boolean login(String user, String pass) {
-        // Gemini: Validation logic here prevents unauthorized access to the system.
-        if (String.valueOf(this.empNo).equals(user) && isPasswordValid(pass)) {
-            System.out.println("Login successful for " + this.firstName);
-            return true;
-        }
-        return false;
-    }
+
+
+//
+@Override
+public boolean login(String user, String pass) {
+  
+    return isPasswordValid(pass);
+}
      
     @Override public abstract Role getRole();
-    @Override public abstract boolean isPasswordValid(String pass);
+   
 
     @Override
-    public int getPasswordStrength() {
-        
-        if (this.tin == null) return 0;
-        return Math.min(this.tin.length() * 10, 100); 
-    }
+   public int getPasswordStrength() {
+    
+    return 0; 
+}
 
     @Override
     public void resetPassword() {
-        System.out.println("ALERT: Password reset for Emp# " + this.empNo);
-        this.status = "PASSWORD_RESET_REQUIRED";
-    }
-    
+   
+    this.status = "PASSWORD_RESET_REQUIRED";
+}
+    @Override
+    public boolean isPasswordValid(String pass) {
+    return this.password != null && this.password.equals(pass);
+}
     @Override
     public void logout() {
-        System.out.println("Employee " + this.firstName + " logged out.");
-    }
+    
+    this.status = "OFFLINE";
+}
     
     // --- IPayrollCalculations (Logic Delegated to service.PayrollCalculator) ---
     
-    @Override
-    public void calculateSalary() {
-        System.out.println("Processing Payroll for: " + this.firstName + " " + this.lastName);
-        System.out.println("Net Pay: " + calculateNetPay());
-    }
+  
+
+    
+   @Override
+public double calculateSalary() {
+    
+    return calculateSahod(); 
+}
+
+   
+    public abstract double calculateSahod();
+
     
     @Override
     public double computeDeductions() {
-        // Gemini: Consistent sequence ensures all statutory obligations are met before tax.
+        
         return calculateSSSDeduction() + calculatePhilHealth() + calculatePagIBIG();
     }
    
@@ -282,7 +322,7 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
    
     @Override
     public double calculateSSSDeduction() {
-        // Gemini: Logic moved to service class to separate "Data" from "Calculation Rules".
+       
         return PayrollCalculator.getSSSDeduction(this.basicSalary);
     }
     public double calculateSSS() {
@@ -291,21 +331,24 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
    // Standard PhilHealth (4%)
     @Override
     public double calculatePhilHealth() {
-        // This will now work perfectly because getPhilHealthDeduction is STATIC
+       
         return PayrollCalculator.getPhilHealthDeduction(this.basicSalary);
     }
    
     @Override
     public double calculatePagIBIG() {
-        // Static call - no 'new' needed
+        
         return PayrollCalculator.getPagIBIGDeduction();
     }
     
-    @Override
-    public double calculateWithholdingTax() {
-        double taxableIncome = calculateGrossSalary() - computeDeductions();
-        return PayrollCalculator.getWithholdingTax(taxableIncome);
-    }
+   @Override
+public double calculateWithholdingTax() {
+    
+    return PayrollCalculator.calculateTaxFromParts(
+        this.calculateGrossSalary(), 
+        this.computeDeductions()
+    );
+}
     
     @Override
     public double calculateNetPay() {
@@ -319,17 +362,19 @@ public abstract class Employee implements IUserOperations, IPayrollCalculations,
 
     // --- ILeaveOperations ---
     @Override
-    public void applyLeave(LeaveRequest request) {
+public void applyLeave(LeaveRequest request) {
+   
+    if (request != null) {
         this.leaveRequests.add(request);
-        System.out.println("Base Action: Leave filed.");
     }
+}
 
     @Override
     public List<LeaveRequest> viewAllLeaveRequests() {
         return this.leaveRequests;
     }
   
-    // Gemini: Partial Abstraction forcing specialized subclasses to define how leaves are filed.
+    // Partial Abstraction forcing specialized subclasses to define how leaves are filed.
     public abstract LeaveRequest applyLeave(String type, LocalDate start, LocalDate end);
 
 

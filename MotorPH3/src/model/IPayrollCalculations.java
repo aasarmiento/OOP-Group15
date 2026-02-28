@@ -17,7 +17,7 @@ public interface IPayrollCalculations {
     public abstract double calculatePagIBIG();
     public abstract double calculateWithholdingTax();
     public abstract double calculateNetPay();
-    public abstract void calculateSalary();
+     public abstract double calculateSalary();
     public abstract double computeDeductions();
     public abstract double computeNet();
     
