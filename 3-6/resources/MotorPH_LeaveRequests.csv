@@ -1,0 +1,8 @@
+LeaveID,ID,LastName,FirstName,Type,Start,End,Reason,Status
+LR-10034-001,10034,Santos,Beatriz,Emergency Leave,03/06/2026,03/13/2026,"try",Approved
+LR-10034-002,10034,Santos,Beatriz,Sick Leave,03/07/2026,03/08/2026,"need to check up po sir",Approved
+LR-10005-001,10005,Hernandez,Eduard,Emergency Leave,03/12/2026,03/19/2026,No reason provided,Rejected
+LR-10034-001,10034,Santos,Beatriz,Sick Leave,03/07/2026,03/26/2026,No reason provided,Approved
+LR-10001-3160,10001,Garcia,Manuel III,Emergency Leave,03/07/2026,03/08/2026,er,PENDING
+LR-10001-02,10001,Garcia,Manuel III,Maternity Leave,03/06/2026,03/08/2026,errr,PENDING
+LR-10009-01,10009,Atienza,Rosie,Maternity Leave,03/01/2026,03/08/2026,No reason,PENDING
