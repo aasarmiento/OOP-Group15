@@ -67,6 +67,12 @@ public class EmployeeManagementService {
         return employeeDao.addEmployee(emp);
     }
 
+    //added for IT ticketing login and dashboard panel, getter para sa panel and DB
+    public EmployeeDAO getEmployeeDao() {
+    return employeeDao;
+    
+    }
+
     public List<Employee> getAll() { 
         return employeeDao.getAll();
     }

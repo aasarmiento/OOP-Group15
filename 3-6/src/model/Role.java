@@ -1,29 +1,61 @@
 package model;
 
-
 public enum Role {
-   
- HR_STAFF("HR Staff"),
+    HR_STAFF("HR Staff"),
     ADMIN("Admin"),
     ACCOUNTING("Accounting"),
     REGULAR_STAFF("Regular Staff"),
     IT_STAFF("IT Staff");
 
     private final String label;
-    Role(String label) { this.label = label; }
-    public String getLabel() { return label; }
 
-    // Add this back to satisfy the CSVHandler error
+    Role(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
     public static Role fromString(String text) {
-    if (text == null || text.isEmpty()) return REGULAR_STAFF;
+        if (text == null || text.trim().isEmpty()) return REGULAR_STAFF;
 
-    for (Role r : Role.values()) {
-        // Check if it matches "IT_STAFF" OR "IT Staff"
-        if (r.name().equalsIgnoreCase(text.trim()) || 
-            r.label.equalsIgnoreCase(text.trim())) {
-            return r;
+        String normalized = text.trim().toLowerCase();
+
+        switch (normalized) {
+            case "admin":
+            case "administrator":
+                return ADMIN;
+
+            case "hr":
+            case "hr staff":
+            case "human resources":
+                return HR_STAFF;
+
+            case "it":
+            case "it staff":
+            case "systems":
+            case "operations":
+                return IT_STAFF;
+
+            case "accounting":
+            case "finance":
+            case "account":
+                return ACCOUNTING;
+
+            case "regular":
+            case "regular staff":
+            case "employee":
+                return REGULAR_STAFF;
+
+            default:
+                for (Role r : Role.values()) {
+                    if (r.name().equalsIgnoreCase(text.trim()) ||
+                        r.getLabel().equalsIgnoreCase(text.trim())) {
+                        return r;
+                    }
+                }
+                return REGULAR_STAFF;
         }
     }
-    return REGULAR_STAFF;
-}
 }

@@ -1,6 +1,7 @@
 package ui;
 
 import dao.AttendanceDAO;
+import dao.EmployeeDAO;
 import dao.UserLibrary;
 import java.awt.*;
 import java.io.File;
@@ -8,6 +9,8 @@ import java.time.format.DateTimeFormatter;
 import javax.swing.*;
 import model.Employee;
 import service.EmployeeManagementService;
+import service.ITSupportService;
+import service.ITTicketService;
 
 
 public class DashboardPanel extends JFrame {
@@ -35,7 +38,7 @@ public class DashboardPanel extends JFrame {
     public TimePanel timeEmpPanel;
     
     public JPanel itApprovalPanel;
-    public JPanel itSupportPanel;
+    public ITSupportPanel itSupportPanel; //updated this for IT support panel
     public JPanel leaveApprovalPanel;
     public JPanel payrollFinancePanel;
 
@@ -69,9 +72,15 @@ public class DashboardPanel extends JFrame {
 
         // Explicitly creating placeholders for the modules you'll build later
         this.itApprovalPanel = createPlaceholderPanel("IT Approval Module");
-        this.itSupportPanel = createPlaceholderPanel("IT Support Ticket System");
         this.leaveApprovalPanel = createPlaceholderPanel("Manager Leave Approval");
         this.payrollFinancePanel = createPlaceholderPanel("Payroll & My Payslip");
+
+        // fot IT ticketing panel to
+        EmployeeDAO employeeDao = employeeService.getEmployeeDao();
+        ITSupportService itSupportService = new ITSupportService(employeeDao);
+        ITTicketService ticketService = new ITTicketService(employeeDao);
+
+        this.itSupportPanel = new ITSupportPanel(currentUser, itSupportService, ticketService);
 
         // --- STEP 2: FRAME SETUP ---
         setTitle("MotorPH Dashboard - " + userRole); 

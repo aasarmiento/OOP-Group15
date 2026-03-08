@@ -6,22 +6,42 @@ import model.ISupportOperations;
 public class ITSupportService implements ISupportOperations {
     private final EmployeeDAO employeeDAO;
 
-    // We "inject" the DAO so the Service can talk to the database/CSV
     public ITSupportService(EmployeeDAO dao) {
         this.employeeDAO = dao;
     }
 
     @Override
     public void resolveTicket(int empNo) {
-        // Business Rule: Resolving a ticket always sets status to ACTIVE
-        employeeDAO.updateEmployeeStatus(empNo, "ACTIVE");
+        employeeDAO.resetLoginState(empNo);
     }
 
     @Override
-    public boolean resetCredentials(int empNo, String newPassword) {
-        // Business Rule: Update password AND reactivate account
-        employeeDAO.saveNewPassword(empNo, newPassword);
-        employeeDAO.updateEmployeeStatus(empNo, "ACTIVE");
+    public String issueTemporaryPassword(int empNo) {
+        if (employeeDAO.findById(empNo) == null) {
+            return null;
+        }
+
+        String tempPassword = generateTemporaryPassword(empNo);
+
+        employeeDAO.saveNewPassword(empNo, tempPassword);
+        employeeDAO.setMustChangePassword(empNo, true);
+        employeeDAO.resetLoginState(empNo);
+
+        return tempPassword;
+    }
+
+    @Override
+    public boolean unlockAccount(int empNo) {
+        if (employeeDAO.findById(empNo) == null) {
+            return false;
+        }
+
+        employeeDAO.resetLoginState(empNo);
         return true;
+    }
+
+    private String generateTemporaryPassword(int empNo) {
+        int random = 100 + (int) (Math.random() * 900);
+        return "TMP" + empNo + random;
     }
 }
