@@ -111,13 +111,10 @@ btnOut.addActionListener(e -> {
 
 private void refreshUI() {
     model.setRowCount(0);
-    this.revalidate();
-    this.repaint();
-    
-    // Must pass 3 arguments to match your AttendanceCSVHandler
+
     String month = (String) monthPicker.getSelectedItem();
     String year = (String) yearPicker.getSelectedItem();
-    
+
     Object[][] data = service.getAttendanceLogs(currentUser.getEmpNo(), month, year);
     if (data != null) {
         for (Object[] row : data) {
@@ -125,11 +122,21 @@ private void refreshUI() {
         }
     }
 
-    // Update the grey-out "ichura" based on Service logic
     boolean[] states = service.getButtonStates(currentUser.getEmpNo());
+
     btnIn.setEnabled(states[0]);
     btnOut.setEnabled(states[1]);
+
+    btnIn.setBackground(states[0] ? new Color(34, 139, 34) : Color.LIGHT_GRAY);
+    btnOut.setBackground(states[1] ? new Color(178, 34, 34) : Color.LIGHT_GRAY);
+
+    System.out.println("Button states -> Check In: " + states[0] + ", Check Out: " + states[1]);
 }
+
+
+
+
+
     private void styleButton(JButton btn, Color bg) {
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);

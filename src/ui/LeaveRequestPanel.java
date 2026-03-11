@@ -66,7 +66,7 @@ public class LeaveRequestPanel extends JPanel {
         centerWrapper.add(rightPanel, BorderLayout.CENTER);
         return centerWrapper;
     }
-private JPanel createDetailsPanel() {
+    private JPanel createDetailsPanel() {
     JPanel detailsPanel = new JPanel(new BorderLayout(10, 10));
     detailsPanel.setBorder(BorderFactory.createTitledBorder("Leave Details (Click ID to View)"));
     detailsPanel.setPreferredSize(new Dimension(0, 180)); // Slightly taller for the button

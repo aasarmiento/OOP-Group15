@@ -192,9 +192,10 @@ public class DashboardPanel extends JFrame {
 
     private void addNavComponent(JPanel panel, JButton button) {
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setMaximumSize(new Dimension(200, 38)); 
+        button.setPreferredSize(new Dimension(200, 38));
+        button.setMaximumSize(new Dimension(200, 38));
         panel.add(button);
-        panel.add(Box.createVerticalStrut(4)); 
+        panel.add(Box.createVerticalStrut(4));
     }
 
     private void switchPanel(String cardName) { cardLayout.show(cardPanel, cardName); }
@@ -206,7 +207,7 @@ public class DashboardPanel extends JFrame {
 
         JLabel copy = new JLabel("<html><body>Copyright &copy; <b>2026 MotorPH</b></body></html>");
         copy.setFont(bodyFontSmall); 
-        copy.setForeground(Color.WHITE); // White text to pop
+        copy.setForeground(Color.WHITE); 
         
         JLabel privacy = new JLabel("Privacy Policy");
         privacy.setFont(bodyFontSmall); 
@@ -417,58 +418,54 @@ public class DashboardPanel extends JFrame {
     }
 
     class NavButton extends JButton {
-        private final Color hoverBg = new Color(128, 0, 0); 
-        private final Color normalText = new Color(85, 85, 85); 
+        private final Color hoverBg = new Color(128, 0, 0);
+        private final Color normalText = new Color(60, 60, 60);
         private final Color hoverText = Color.WHITE;
 
         public NavButton(String text, String iconPath) {
-            super();
-            setLayout(new FlowLayout(FlowLayout.LEFT, 15, 8));
-            setContentAreaFilled(false); setBorderPainted(false); setFocusPainted(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR)); setFont(new Font("Inter", Font.PLAIN, 13));
+            super(text);
+            
+            setFocusable(false);
+            setHorizontalAlignment(SwingConstants.LEFT);
+            setIconTextGap(12);
+            setMargin(new Insets(8, 15, 8, 15));
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setFont(new Font("Inter", Font.PLAIN, 13));
             setForeground(normalText);
 
             if (iconPath != null) {
-                try {
-                    ImageIcon rawIcon = new ImageIcon(iconPath);
-                    Image img = rawIcon.getImage();
-                    int nw = img.getWidth(null); int nh = img.getHeight(null);
-                    double ratio = (double) nw / nh;
-                    int finalW = (nw > nh) ? 18 : (int)(18 * ratio);
-                    int finalH = (nw > nh) ? (int)(18 / ratio) : 18;
-                    Image scaledImg = img.getScaledInstance(finalW, finalH, Image.SCALE_SMOOTH);
-                    JPanel iconContainer = new JPanel(new GridBagLayout());
-                    iconContainer.setOpaque(false);
-                    iconContainer.setPreferredSize(new Dimension(20, 20));
-                    iconContainer.add(new JLabel(new ImageIcon(scaledImg)));
-                    add(iconContainer);
-                } catch (Exception e) {}
+                ImageIcon rawIcon = new ImageIcon(iconPath);
+                if (rawIcon.getIconWidth() > 0 && rawIcon.getIconHeight() > 0) {
+                    Image scaledImg = rawIcon.getImage().getScaledInstance(18, 18, Image.SCALE_SMOOTH);
+                    setIcon(new ImageIcon(scaledImg));
+                }
             }
-            JLabel textLabel = new JLabel(text);
-            textLabel.setFont(getFont()); textLabel.setForeground(getForeground());
-            add(textLabel);
+
+            getModel().addChangeListener(e -> {
+                if (getModel().isRollover() || getModel().isPressed()) {
+                    setForeground(hoverText);
+                } else {
+                    setForeground(normalText);
+                }
+                repaint();
+            });
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
             if (getModel().isRollover() || getModel().isPressed() || isFocusOwner()) {
                 g2.setColor(hoverBg);
                 g2.fillRoundRect(8, 2, getWidth() - 16, getHeight() - 4, 20, 20);
-                updateChildColors(hoverText);
-            } else { updateChildColors(normalText); }
+            }
+
             g2.dispose();
             super.paintComponent(g);
-        }
-
-        private void updateChildColors(Color color) {
-            for (Component c : getComponents()) {
-                if (c instanceof JLabel) c.setForeground(color);
-                else if (c instanceof JPanel) {
-                    for (Component sub : ((JPanel) c).getComponents()) if (sub instanceof JLabel) sub.setForeground(color);
-                }
-            }
         }
     }
 

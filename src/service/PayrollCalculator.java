@@ -1,88 +1,132 @@
 package service;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import model.Employee;
+import model.PayrollBreakdown;
 import model.PeriodSummary;
 
-/**
- * SERVICE LAYER: Business Logic & Calculations
- * This class contains the rules for Gross Income, SSS, PhilHealth, Pag-IBIG, and Tax.
- */
 public class PayrollCalculator {
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
 
-    /**
-     * MAIN METHOD: Bridges the processed Gross Income to the final Deductions.
-     * This creates the PeriodSummary model used by the MyPayslip UI.
-     */
-    /**
-     * MAIN METHOD: Bridges the processed Gross Income to the final Deductions.
-     * This creates the PeriodSummary model used by the MyPayslip UI.
-     */
+    private final PayrollPolicy policy;
+    private static final LocalTime SHIFT_START = LocalTime.of(8, 0);
+    private static final int GRACE_MINUTES = 10;
+    private static final LocalTime LATE_CUTOFF = SHIFT_START.plusMinutes(GRACE_MINUTES);
+    private static final DateTimeFormatter UI_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public PayrollCalculator() {
+        this.policy = new DolePolicy();
+    }
+
+    // New OOP-based method
+    public PayrollBreakdown calculateBreakdown(Employee emp, double hoursWorked) {
+        return policy.compute(emp, hoursWorked);
+    }
+
+    // Keep old UI-compatible method
+    public double calculateGrossIncome(Employee emp, double hoursWorked) {
+        return calculateBreakdown(emp, hoursWorked).getGrossPay();
+    }
+
+    // Keep old UI-compatible method
     public PeriodSummary calculateFullSummary(Employee emp, double grossIncome) {
         if (emp == null) {
-            // Corrected: Providing 6 zeros to match the 6 parameters in PeriodSummary
             return new PeriodSummary(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 
-        // 1. Calculate statutory deductions based on Basic Salary
-        double monthlySalary = emp.getBasicSalary();
-        double sss = getSSSDeduction(monthlySalary);
-        double ph = getPhilHealthDeduction(monthlySalary);
-        double pagibig = getPagIBIGDeduction(monthlySalary);
+        double hoursWorked = estimateHoursWorkedFromGross(emp, grossIncome);
+        PayrollBreakdown breakdown = calculateBreakdown(emp, hoursWorked);
 
-        // 2. Tax Calculation (Taxable Income = Gross - Gov Deductions)
-        double totalGov = sss + ph + pagibig;
-        double taxableIncome = grossIncome - totalGov;
-        double tax = getWithholdingTax(taxableIncome);
-
-        // 3. Net Pay Calculation
-        double net = grossIncome - (totalGov + tax);
-
-        // 4. THE FIX: Match the constructor (gross, sss, ph, pagibig, tax, net)
-        // Removed the extra leading '0' that was causing the error
-        return new PeriodSummary(grossIncome, sss, ph, pagibig, tax, net);
+        return new PeriodSummary(
+                breakdown.getGrossPay(),
+                breakdown.getSss(),
+                breakdown.getPhilhealth(),
+                breakdown.getPagibig(),
+                breakdown.getWithholdingTax(),
+                breakdown.getNetPay()
+        );
     }
 
-    /**
-     * Business Logic: Gross = (Hourly * Hours) + Allowances
-     */
-    public double calculateGrossIncome(Employee emp, double hoursWorked) {
-        if (emp == null) return 0.0;
-        double basicPay = emp.getHourlyRate() * hoursWorked;
-        double allowances = emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance();
-        return basicPay + allowances;
-    }
-
-    // --- Statutory Formula Methods (Business Rules) ---
-
-    public double getPagIBIGDeduction(double monthlySalary) {
-        double contribution = (monthlySalary > 1500) ? monthlySalary * 0.02 : monthlySalary * 0.01;
-        return Math.min(contribution, 100.00); 
-    }
-
+    // Keep wrapper methods too, in case other parts of the system still call them
     public double getSSSDeduction(double monthlySalary) {
-        if (monthlySalary < 3250) return 135.00;
-        if (monthlySalary >= 24750) return 1125.00; 
-        double excess = monthlySalary - 3250;
-        int steps = (int) (excess / 500);
-        return 135.00 + (steps * 22.50);
+        return DolePolicy.getSSSDeduction(monthlySalary);
     }
 
     public double getPhilHealthDeduction(double monthlySalary) {
-        double totalPremium;
-        if (monthlySalary <= 10000) totalPremium = 300.00;
-        else if (monthlySalary >= 60000) totalPremium = 1800.00;
-        else totalPremium = monthlySalary * 0.03;
-        return totalPremium / 2; 
+        return DolePolicy.getPhilHealthDeduction(monthlySalary);
+    }
+
+    public double getPagIBIGDeduction(double monthlySalary) {
+        return DolePolicy.getPagIBIGDeduction(monthlySalary);
     }
 
     public double getWithholdingTax(double taxableIncome) {
-        if (taxableIncome <= 20832) return 0.0;
-        if (taxableIncome < 33333) return (taxableIncome - 20833) * 0.20;
-        if (taxableIncome < 66667) return 2500.00 + (taxableIncome - 33333) * 0.25;
-        if (taxableIncome < 166667) return 10833.33 + (taxableIncome - 66667) * 0.30;
-        if (taxableIncome < 666667) return 40833.33 + (taxableIncome - 166667) * 0.32;
-        return 200833.33 + (taxableIncome - 666667) * 0.35;
+        return DolePolicy.getWithholdingTax(taxableIncome);
     }
+
+    private double estimateHoursWorkedFromGross(Employee emp, double grossIncome) {
+        if (emp == null || emp.getHourlyRate() <= 0) {
+            return 0.0;
+        }
+
+        double allowances =
+                safe(emp.getRiceSubsidy()) +
+                safe(emp.getPhoneAllowance()) +
+                safe(emp.getClothingAllowance());
+
+        double estimatedBasicEarned = Math.max(0.0, grossIncome - allowances);
+        return estimatedBasicEarned / emp.getHourlyRate();
+    }
+
+    private double safe(double value) {
+        return Double.isFinite(value) ? value : 0.0;
+    }
+
+    public int calculateLateMinutes(Object[][] rawLogs) {
+    if (rawLogs == null || rawLogs.length == 0) {
+        return 0;
+    }
+
+    Map<LocalDate, LocalTime> firstLogInPerDay = new HashMap<>();
+
+    for (Object[] row : rawLogs) {
+        if (row == null || row.length < 2 || row[0] == null || row[1] == null) {
+            continue;
+        }
+
+        String dateStr = row[0].toString().trim();
+        String logInStr = row[1].toString().trim();
+
+        if (logInStr.isEmpty() || "N/A".equalsIgnoreCase(logInStr)) {
+            continue;
+        }
+
+        try {
+            LocalDate date = LocalDate.parse(dateStr, UI_DATE_FORMAT);
+            LocalTime logIn = LocalTime.parse(logInStr);
+
+            LocalTime existing = firstLogInPerDay.get(date);
+            if (existing == null || logIn.isBefore(existing)) {
+                firstLogInPerDay.put(date, logIn);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    int totalLateMinutes = 0;
+
+    for (LocalTime firstLogIn : firstLogInPerDay.values()) {
+        if (firstLogIn.isAfter(LATE_CUTOFF)) {
+            totalLateMinutes += (int) Duration.between(LATE_CUTOFF, firstLogIn).toMinutes();
+        }
+    }
+
+    return totalLateMinutes;
+    }
+
+
 }

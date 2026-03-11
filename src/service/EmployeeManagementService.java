@@ -297,19 +297,23 @@ public class EmployeeManagementService {
     }
 
     public boolean[] getButtonStates(int empNo) {
-        boolean[] states = {true, false}; 
+        boolean[] states = {true, false};
+
         try {
-            String lastStatus = attendanceDao.getLastStatus(empNo);
-            if ("Check-in".equalsIgnoreCase(lastStatus)) {
-                states[0] = false;
-                states[1] = true;
+            String status = attendanceDao.getLastStatus(empNo);
+            System.out.println("Last status for emp " + empNo + ": " + status);
+
+            if ("CHECKED_IN".equalsIgnoreCase(status)) {
+                states[0] = false; // Check In disabled
+                states[1] = true;  // Check Out enabled
             } else {
-                states[0] = true;
-                states[1] = false;
+                states[0] = true;  // ready for next Check In
+                states[1] = false; // no open session
             }
         } catch (Exception e) {
             System.err.println("Error fetching button states: " + e.getMessage());
         }
+
         return states;
     }
 

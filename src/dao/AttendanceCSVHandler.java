@@ -99,78 +99,123 @@ public class AttendanceCSVHandler implements AttendanceDAO {
     public void recordAttendance(int empNo, String lastName, String firstName, String type) {
         File file = new File(FILE_PATH);
         List<String> lines = new ArrayList<>();
-        
-        // Use MM/dd/yyyy to match the existing file data format
+
         String todayStr = LocalDate.now().format(fileDateFormat);
         String timeStr = LocalTime.now().format(timeFormat);
-        boolean foundToday = false;
+        boolean headerFound = false;
+        boolean openSessionFound = false;
 
-        // 1. READ and check for today's record
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty()) continue;
-                
-                // Keep the header
-                if (line.startsWith("Employee #")) {
+
+                if (line.replace("\uFEFF", "").startsWith("Employee #")) {
+                    headerFound = true;
                     lines.add(line);
                     continue;
                 }
 
                 String[] parts = line.split(",");
-                // parts[0] is ID, parts[3] is Date
-                if (parts.length >= 4 && parts[0].replace("\uFEFF", "").trim().equals(String.valueOf(empNo)) 
-                    && parts[3].trim().equals(todayStr)) {
-                    
-                    foundToday = true;
-                    if (type.equalsIgnoreCase("Check-out")) {
-                        // Update only Log Out (parts[5]), keep Log In (parts[4])
+                if (parts.length >= 6
+                        && parts[0].replace("\uFEFF", "").trim().equals(String.valueOf(empNo))
+                        && parts[3].trim().equals(todayStr)) {
+
+                    String logIn = parts[4].trim();
+                    String logOut = parts[5].trim();
+
+                    boolean hasLogIn = !logIn.equalsIgnoreCase("N/A") && !logIn.isEmpty();
+                    boolean hasOpenLogOut = logOut.equalsIgnoreCase("N/A") || logOut.isEmpty();
+
+                    // For checkout: close the latest open row for today
+                    if (type.equalsIgnoreCase("Check-out") && hasLogIn && hasOpenLogOut) {
                         line = parts[0] + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[4] + "," + timeStr;
+                        openSessionFound = true;
+                    }
+
+                    // For check-in: remember if an open session already exists
+                    if (type.equalsIgnoreCase("Check-in") && hasLogIn && hasOpenLogOut) {
+                        openSessionFound = true;
                     }
                 }
+
                 lines.add(line);
             }
-        } catch (IOException e) { e.printStackTrace(); }
-
-        // 2. Add NEW Check-in if not found
-        if (type.equalsIgnoreCase("Check-in") && !foundToday) {
-            lines.add(empNo + "," + lastName + "," + firstName + "," + todayStr + "," + timeStr + ",N/A");
+        } catch (FileNotFoundException e) {
+            System.out.println("Attendance file not found. Creating new file.");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        // 3. WRITE back to file
-        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file, false)))) {
-            for (String l : lines) pw.println(l);
-            pw.flush();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
+        if (!headerFound) {
+            lines.add(0, "Employee #,Last Name,First Name,Date,Log In,Log Out");
+        }
 
-
-
-
-
-    // Inside your AttendanceDAO implementation class
-@Override
-public String getLastStatus(int empId) {
-    String lastStatus = "Check-out"; // Default state
-    File file = new File("resources/attendance.csv");
-    
-    if (!file.exists()) return lastStatus;
-
-    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(",");
-            // Assuming CSV format: EmpID, LastName, FirstName, Date, Time, Action
-            if (data.length >= 6 && Integer.parseInt(data[0].trim()) == empId) {
-                lastStatus = data[5].trim(); // Get the "Action" column
+        // Check-in: add a NEW row only if there is no currently open session
+        if (type.equalsIgnoreCase("Check-in")) {
+            if (!openSessionFound) {
+                lines.add(empNo + "," + lastName + "," + firstName + "," + todayStr + "," + timeStr + ",N/A");
+                System.out.println("Check-in recorded for emp " + empNo + " at " + timeStr);
+            } else {
+                System.out.println("Check-in ignored: open session already exists.");
             }
         }
-    } catch (Exception e) {
-        System.err.println("Error reading last status: " + e.getMessage());
+
+        // Check-out: only valid if an open session was found and closed
+        if (type.equalsIgnoreCase("Check-out") && !openSessionFound) {
+            System.out.println("Check-out ignored: no open session found.");
+        }
+
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file, false)))) {
+            for (String l : lines) {
+                pw.println(l);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-    
-    return lastStatus;
-}
+
+
+
+
+
+    @Override
+    public String getLastStatus(int empId) {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return "READY_FOR_CHECK_IN";
+
+        String todayStr = LocalDate.now().format(fileDateFormat);
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty() || line.startsWith("Employee #")) {
+                    continue;
+                }
+
+                String[] data = line.split(",");
+                if (data.length < 6) continue;
+
+                int id = Integer.parseInt(data[0].replace("\uFEFF", "").trim());
+                String date = data[3].trim();
+                String logIn = data[4].trim();
+                String logOut = data[5].trim();
+
+                if (id == empId && todayStr.equals(date)) {
+                    boolean hasLogIn = !logIn.equalsIgnoreCase("N/A") && !logIn.isEmpty();
+                    boolean hasOpenLogOut = logOut.equalsIgnoreCase("N/A") || logOut.isEmpty();
+
+                    if (hasLogIn && hasOpenLogOut) {
+                        return "CHECKED_IN";
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error reading last status: " + e.getMessage());
+        }
+
+        return "READY_FOR_CHECK_IN";
+    }
 
 
 @Override // Add this

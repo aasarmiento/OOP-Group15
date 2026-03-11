@@ -5,10 +5,12 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.*;
 import model.Attendance;
 import model.Employee;
-import model.PeriodSummary;
+import model.PayrollBreakdown;
 import service.EmployeeManagementService;
 import service.PayrollCalculator;
 import service.PayrollService;
@@ -26,6 +28,8 @@ public class MyPayslip extends JPanel {
     private JLabel lblBasic, lblAllowances, lblLateMinutes, lblLateDeduction, lblTaxableIncome;
 
     public MyPayslip(EmployeeManagementService service, PayrollCalculator calc, PayrollService payrollService, Employee user) {
+        
+
         this.service = service;
         this.calc = calc;
         this.payrollService = payrollService;
@@ -47,6 +51,8 @@ public class MyPayslip extends JPanel {
         calculateSalary();
     }
 
+
+
     private JPanel createPayslipHeader() {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         header.setBackground(new Color(245, 245, 245));
@@ -57,7 +63,7 @@ public class MyPayslip extends JPanel {
         });
 
         yearPicker = new JComboBox<>(new String[]{"2024", "2025", "2026"});
-        yearPicker.setSelectedItem("2024");
+        yearPicker.setSelectedItem("2026");
 
         JButton btnCalculate = new JButton("Calculate Salary");
         btnCalculate.addActionListener(e -> calculateSalary());
@@ -121,6 +127,7 @@ public class MyPayslip extends JPanel {
         mainContent.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = -1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(2, 0, 2, 0); // Vertical spacing between rows
@@ -160,50 +167,89 @@ public class MyPayslip extends JPanel {
         lblTax = createLabeledRow(mainContent, "Withholding Tax:", gbc);
         
         // Net Pay Section
+        gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.insets = new Insets(30, 0, 0, 0);
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(20, 0, 0, 0);
+
+        JPanel netPayPanel = new JPanel(new BorderLayout());
+        netPayPanel.setOpaque(false);
+        netPayPanel.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
+
         lblNetPay = new JLabel("NET PAY: 0.00");
         lblNetPay.setFont(new Font("SansSerif", Font.BOLD, 22));
+        lblNetPay.setForeground(Color.BLACK);
         lblNetPay.setHorizontalAlignment(SwingConstants.RIGHT);
-        mainContent.add(lblNetPay, gbc);
+
+        netPayPanel.add(lblNetPay, BorderLayout.CENTER);
+        mainContent.add(netPayPanel, gbc);
+
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        mainContent.add(Box.createVerticalGlue(), gbc);
+
 
         return mainContent;
     }
 
     private void addSectionHeader(JPanel parent, String text, GridBagConstraints gbc) {
         gbc.gridx = 0;
+        gbc.gridy++;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 0, 8, 0);
+
         JLabel header = new JLabel(text);
         header.setFont(new Font("SansSerif", Font.BOLD, 14));
-        header.setForeground(new Color(46, 125, 50)); 
+        header.setForeground(new Color(46, 125, 50));
+
         parent.add(header, gbc);
-        gbc.gridwidth = 1; // Reset width
+        gbc.gridwidth = 1;
     }
 
     private JLabel createLabeledRow(JPanel parent, String labelText, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        gbc.weightx = 0.5;
-        gbc.insets = new Insets(2, 0, 2, 50); // Margin between label and value
-        JLabel label = new JLabel(labelText);
-        label.setForeground(Color.DARK_GRAY);
-        parent.add(label, gbc);
+    gbc.gridy++;
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        gbc.insets = new Insets(2, 0, 2, 0);
-        JLabel value = new JLabel("0.00");
-        value.setHorizontalAlignment(SwingConstants.RIGHT); // Right align values for currency look
-        parent.add(value, gbc);
+    gbc.gridx = 0;
+    gbc.weightx = 0.45;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(4, 0, 4, 40);
 
-        return value;
+    JLabel label = new JLabel(labelText);
+    label.setForeground(Color.DARK_GRAY);
+    label.setFont(new Font("SansSerif", Font.PLAIN, 13));
+    parent.add(label, gbc);
+
+    gbc.gridx = 1;
+    gbc.weightx = 0.55;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(4, 0, 4, 0);
+
+    JLabel value = new JLabel("0.00");
+    value.setForeground(Color.BLACK);
+    value.setFont(new Font("SansSerif", Font.PLAIN, 13));
+    value.setHorizontalAlignment(SwingConstants.RIGHT);
+    value.setPreferredSize(new Dimension(180, 22));
+
+    parent.add(value, gbc);
+
+    return value;
     }
 
     private void addSpacer(JPanel parent, GridBagConstraints gbc) {
+        gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
+        gbc.insets = new Insets(8, 0, 8, 0);
+
         parent.add(Box.createVerticalStrut(10), gbc);
+
+        gbc.gridwidth = 1;
     }
 
     public final void calculateSalary() {
@@ -212,49 +258,87 @@ public class MyPayslip extends JPanel {
             String year = (String) yearPicker.getSelectedItem();
 
             Object[][] rawLogs = service.getAttendanceLogs(currentUser.getEmpNo(), month, year);
-            double totalHours = 0;
-            
-            for (Object[] row : rawLogs) {
-                Attendance record = new Attendance(
-                    currentUser.getEmpNo(),
-                    LocalDate.parse(row[0].toString().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    row[1].equals("N/A") ? null : LocalTime.parse(row[1].toString().trim()),
-                    row[2].equals("N/A") ? null : LocalTime.parse(row[2].toString().trim())
-                );
-                payrollService.processAttendance(record);
-                totalHours += record.getHoursWorked();
+            if (rawLogs == null) {
+                rawLogs = new Object[0][];
             }
 
-            double grossIncome = calc.calculateGrossIncome(currentUser, totalHours);
-            PeriodSummary summary = calc.calculateFullSummary(currentUser, grossIncome);
+            double totalHours = 0.0;
 
-            // Update UI Fields
+            for (Object[] row : rawLogs) {
+                try {
+                    Attendance record = new Attendance(
+                        currentUser.getEmpNo(),
+                        LocalDate.parse(row[0].toString().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "N/A".equalsIgnoreCase(row[1].toString().trim()) ? null : LocalTime.parse(row[1].toString().trim()),
+                        "N/A".equalsIgnoreCase(row[2].toString().trim()) ? null : LocalTime.parse(row[2].toString().trim())
+                    );
+
+                    payrollService.processAttendance(record);
+                    totalHours += record.getHoursWorked();
+
+                } catch (Exception rowEx) {
+                    System.err.println("Skipping bad attendance row: " + rowEx.getMessage());
+                }
+            }
+
+            PayrollBreakdown breakdown = calc.calculateBreakdown(currentUser, totalHours);
+
+            // Employee info
             lblEmployeeId.setText(String.valueOf(currentUser.getEmpNo()));
             lblEmployeeName.setText(currentUser.getFullName());
-            lblPosition.setText("Chief Finance Officer"); // Or currentUser.getPosition()
-            lblStatus.setText("Regular");
-            lblDaysPresent.setText(String.valueOf(rawLogs.length));
-            
-            // Note: Update these getters based on your model/PeriodSummary capabilities
-            lblLateMinutes.setText("2350"); // Placeholder
-            lblLateDeduction.setText(df.format(13987.98)); // Placeholder
-            
-            lblBasic.setText(df.format(currentUser.getBasicSalary()));
-            double totalAllowances = currentUser.getRiceSubsidy() + currentUser.getPhoneAllowance() + currentUser.getClothingAllowance();
-            lblAllowances.setText(df.format(totalAllowances));
-            lblGross.setText(df.format(summary.getGrossIncome()));
+            lblPosition.setText(currentUser.getPosition() != null ? currentUser.getPosition() : "N/A");
+            lblStatus.setText(currentUser.getStatus() != null ? currentUser.getStatus() : "N/A");
 
-            lblSss.setText(df.format(summary.getSss()));
-            lblPhilhealth.setText(df.format(summary.getPhilhealth()));
-            lblPagibig.setText(df.format(summary.getPagibig()));
-            
-            lblTaxableIncome.setText(df.format(summary.getGrossIncome() - (summary.getSss() + summary.getPhilhealth() + summary.getPagibig())));
-            lblTax.setText(df.format(summary.getTax()));
-            lblNetPay.setText("NET PAY: " + df.format(summary.getNetPay()));
+            // Attendance summary
+            lblDaysPresent.setText(String.valueOf(countDistinctDays(rawLogs)));
+            int totalLateMinutes = calc.calculateLateMinutes(rawLogs);
+            lblLateMinutes.setText(String.valueOf(totalLateMinutes));
+            lblLateDeduction.setText(df.format(0.00));
+
+            // Earnings
+            lblBasic.setText(df.format(currentUser.getBasicSalary()));
+            lblAllowances.setText(df.format(breakdown.getTotalAllowances()));
+            lblGross.setText(df.format(breakdown.getGrossPay()));
+
+            // Deductions
+            lblSss.setText(df.format(breakdown.getSss()));
+            lblPhilhealth.setText(df.format(breakdown.getPhilhealth()));
+            lblPagibig.setText(df.format(breakdown.getPagibig()));
+
+            // Tax + Net
+            lblTaxableIncome.setText(df.format(breakdown.getTaxableIncome()));
+            lblTax.setText(df.format(breakdown.getWithholdingTax()));
+            lblNetPay.setText("NET PAY: " + df.format(breakdown.getNetPay()));
+
+            revalidate();
+            repaint();
+
+            SwingUtilities.invokeLater(() -> {
+                revalidate();
+                repaint();
+            });
+
+            System.out.println("Payslip recalculated for emp " + currentUser.getEmpNo());
+            System.out.println("Total hours: " + totalHours);
+            System.out.println("Gross: " + breakdown.getGrossPay());
+            System.out.println("Taxable: " + breakdown.getTaxableIncome());
+            System.out.println("Net: " + breakdown.getNetPay());
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error calculating payroll: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    private int countDistinctDays(Object[][] rawLogs) {
+    Set<String> uniqueDays = new HashSet<>();
+
+    for (Object[] row : rawLogs) {
+        if (row != null && row.length > 0 && row[0] != null) {
+            uniqueDays.add(row[0].toString().trim());
+        }
+    }
+
+    return uniqueDays.size();
     }
 }
