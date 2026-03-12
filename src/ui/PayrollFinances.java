@@ -63,7 +63,8 @@ public class PayrollFinances extends JPanel {
         });
         yearPicker = new JComboBox<>(new String[]{"2024", "2025", "2026"});
         
-        JButton btnRefresh = new JButton("Generate Report");
+        JButton btnRefresh = new JButton("Generate Payroll");
+        btnRefresh.addActionListener(e -> generatePayroll());
         btnRefresh.setBackground(new Color(128, 0, 0));
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setFocusPainted(false);
@@ -76,6 +77,20 @@ public class PayrollFinances extends JPanel {
         
         return filter;
     }
+
+    private void generatePayroll() {
+    String month = (String) monthPicker.getSelectedItem();
+    String year = (String) yearPicker.getSelectedItem();
+
+    try {
+        payrollService.generatePayrollForPeriod(month, year);
+        JOptionPane.showMessageDialog(this, "Payroll batch generated for " + month + " " + year + ".");
+        refreshData();
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error generating payroll: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
 
     private JPanel createKPIRow() {
         JPanel row = new JPanel(new GridLayout(1, 4, 15, 0));
@@ -162,35 +177,49 @@ public class PayrollFinances extends JPanel {
     }
 
     public void refreshData() {
-        tableModel.setRowCount(0); 
-        String month = (String) monthPicker.getSelectedItem();
-        String year = (String) yearPicker.getSelectedItem();
+    tableModel.setRowCount(0);
 
-        try {
-            List<Object[]> report = payrollService.getFullPayrollReport(month, year);
-            double totalNet = 0;
-            for (Object[] row : report) {
-                // We create a new array with 9 slots (to include the "View" string)
-                Object[] rowData = new Object[9];
-                rowData[0] = row[0]; // ID
-                rowData[1] = row[1]; // Name
-                rowData[2] = row[2]; // Position
-                rowData[3] = df.format(row[3]); // Basic
-                rowData[4] = df.format(row[4]); // Allowances
-                rowData[5] = df.format(row[5]); // Gross
-                rowData[6] = df.format(row[6]); // Net
-                rowData[7] = row[7]; // Status
-                rowData[8] = "View"; // Action text to match your screenshot
-                
-                tableModel.addRow(rowData);
-                totalNet += (double) row[6];
-            }
-            lblTotalNet.setText("₱" + df.format(totalNet));
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    String month = (String) monthPicker.getSelectedItem();
+    String year = (String) yearPicker.getSelectedItem();
+
+    try {
+        List<Object[]> report = payrollService.loadPayrollBatch(month, year);
+
+        double totalBasic = 0;
+        double totalAllowances = 0;
+        double totalGross = 0;
+        double totalNet = 0;
+
+        for (Object[] row : report) {
+            Object[] rowData = new Object[9];
+            rowData[0] = row[0]; // ID
+            rowData[1] = row[1]; // Name
+            rowData[2] = row[2]; // Position
+            rowData[3] = df.format((double) row[3]); // Basic
+            rowData[4] = df.format((double) row[4]); // Allowances
+            rowData[5] = df.format((double) row[5]); // Gross
+            rowData[6] = df.format((double) row[6]); // Net
+            rowData[7] = row[7]; // Status
+            rowData[8] = "View";
+
+            tableModel.addRow(rowData);
+
+            totalBasic += (double) row[3];
+            totalAllowances += (double) row[4];
+            totalGross += (double) row[5];
+            totalNet += (double) row[6];
         }
-    }
 
+        lblTotalSalary.setText("₱" + df.format(totalBasic));
+        lblTotalAllowances.setText("₱" + df.format(totalAllowances));
+        lblTotalGross.setText("₱" + df.format(totalGross));
+        lblTotalNet.setText("₱" + df.format(totalNet));
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
     private JPanel createChartPlaceholder(String titleText) {
         JPanel p = new JPanel(new BorderLayout());
         p.setBackground(Color.WHITE);

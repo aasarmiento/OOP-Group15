@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import model.AttendanceSummary;
 import model.Employee;
 import model.PayrollBreakdown;
 import model.PeriodSummary;
@@ -82,10 +83,6 @@ public class PayrollCalculator {
         return estimatedBasicEarned / emp.getHourlyRate();
     }
 
-    private double safe(double value) {
-        return Double.isFinite(value) ? value : 0.0;
-    }
-
     public int calculateLateMinutes(Object[][] rawLogs) {
     if (rawLogs == null || rawLogs.length == 0) {
         return 0;
@@ -126,6 +123,98 @@ public class PayrollCalculator {
     }
 
     return totalLateMinutes;
+    }
+
+    public double calculateDailyRate(Employee emp) {
+    double basicSalary = safe(emp.getBasicSalary());
+    return round2((basicSalary * 12.0) / 365.0);
+    }
+
+    public double calculateMinuteRate(Employee emp) {
+        return calculateDailyRate(emp) / 8.0 / 60.0;
+    }
+
+    public double calculateLateDeduction(Employee emp, int lateMinutes) {
+        return round2(calculateMinuteRate(emp) * lateMinutes);
+    }
+
+    public double calculateUndertimeDeduction(Employee emp, int undertimeMinutes) {
+        return round2(calculateMinuteRate(emp) * undertimeMinutes);
+    }
+
+    public double calculateAbsenceDeduction(Employee emp, int absentDays) {
+        return round2(calculateDailyRate(emp) * absentDays);
+    }
+
+
+    public PayrollBreakdown calculateBreakdown(Employee emp, AttendanceSummary attendance) {
+    if (emp == null || attendance == null) {
+        return new PayrollBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
+
+    double basicSalary = safe(emp.getBasicSalary());
+
+    double lateDeduction = calculateLateDeduction(emp, attendance.getLateMinutes());
+    double undertimeDeduction = calculateUndertimeDeduction(emp, attendance.getUndertimeMinutes());
+    double absenceDeduction = calculateAbsenceDeduction(emp, attendance.getAbsentDays());
+
+    double attendanceDeduction = round2(lateDeduction + undertimeDeduction + absenceDeduction);
+    double adjustedBasicPay = round2(Math.max(0.0, basicSalary - attendanceDeduction));
+
+    double rice = safe(emp.getRiceSubsidy());
+    double phone = safe(emp.getPhoneAllowance());
+    double clothing = safe(emp.getClothingAllowance());
+
+    double totalAllowances = round2(rice + phone + clothing);
+
+    double nonTaxableRice = Math.min(rice, 2000.00);
+    double nonTaxableClothing = Math.min(clothing, 7000.00 / 12.0);
+
+    double taxableRice = round2(rice - nonTaxableRice);
+    double taxableClothing = round2(clothing - nonTaxableClothing);
+    double taxablePhone = phone;
+
+    double nonTaxableAllowances = round2(nonTaxableRice + nonTaxableClothing);
+    double taxableAllowances = round2(taxableRice + taxableClothing + taxablePhone);
+
+    double grossPay = round2(adjustedBasicPay + totalAllowances);
+
+    // Continue using monthly basic salary as contribution base
+    double contributionBase = basicSalary;
+
+    double sss = DolePolicy.getSSSDeduction(contributionBase);
+    double philhealth = DolePolicy.getPhilHealthDeduction(contributionBase);
+    double pagibig = DolePolicy.getPagIBIGDeduction(contributionBase);
+
+    double taxableIncome = round2(
+            Math.max(0.0, adjustedBasicPay + taxableAllowances - (sss + philhealth + pagibig))
+    );
+
+    double withholdingTax = DolePolicy.getWithholdingTax(taxableIncome);
+    double netPay = round2(grossPay - (sss + philhealth + pagibig + withholdingTax));
+
+    return new PayrollBreakdown(
+            attendance.getWorkedHours(),
+            adjustedBasicPay,
+            totalAllowances,
+            taxableAllowances,
+            nonTaxableAllowances,
+            grossPay,
+            taxableIncome,
+            sss,
+            philhealth,
+            pagibig,
+            withholdingTax,
+            netPay
+        );
+    }
+
+    private double safe(double value) {
+    return Double.isFinite(value) ? value : 0.0;
+    }
+
+    private double round2(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
 

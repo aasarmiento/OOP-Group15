@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.swing.*;
 import model.Attendance;
+import model.AttendanceSummary;
 import model.Employee;
 import model.PayrollBreakdown;
 import service.EmployeeManagementService;
@@ -281,7 +282,13 @@ public class MyPayslip extends JPanel {
                 }
             }
 
-            PayrollBreakdown breakdown = calc.calculateBreakdown(currentUser, totalHours);
+            AttendanceSummary attendance = payrollService.summarizeAttendance(
+                currentUser.getEmpNo(),
+                month,
+                year
+            );
+
+            PayrollBreakdown breakdown = calc.calculateBreakdown(currentUser, attendance);
 
             // Employee info
             lblEmployeeId.setText(String.valueOf(currentUser.getEmpNo()));
@@ -290,10 +297,9 @@ public class MyPayslip extends JPanel {
             lblStatus.setText(currentUser.getStatus() != null ? currentUser.getStatus() : "N/A");
 
             // Attendance summary
-            lblDaysPresent.setText(String.valueOf(countDistinctDays(rawLogs)));
-            int totalLateMinutes = calc.calculateLateMinutes(rawLogs);
-            lblLateMinutes.setText(String.valueOf(totalLateMinutes));
-            lblLateDeduction.setText(df.format(0.00));
+            lblDaysPresent.setText(String.valueOf(attendance.getPresentDays()));
+            lblLateMinutes.setText(String.valueOf(attendance.getLateMinutes()));
+            lblLateDeduction.setText(df.format(calc.calculateLateDeduction(currentUser, attendance.getLateMinutes())));
 
             // Earnings
             lblBasic.setText(df.format(currentUser.getBasicSalary()));
