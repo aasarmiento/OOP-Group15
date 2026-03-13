@@ -1,0 +1,8 @@
+MOTORPH PORTAL - EMPLOYEE RECORD
+--------------------------------
+ID: 10034
+Name: Beatriz Santos
+Position: Customer Service and Relations
+Address: Agapita Building, Metro Manila
+Phone: 526-639-511
+Gross Rate: 1000.00

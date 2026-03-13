@@ -1,0 +1,14 @@
+MOTORPH PORTAL - EMPLOYEE RECORD
+--------------------------------
+ID: 10009
+Name: Rosie Atienza
+Position: HR Rank and File
+Address: 90A Dibbert Terrace Apt. 190, San Lorenzo 6056 Davao del Norte
+Phone: 266-036-427
+Gross Rate: 11250.0
+--------------------------------
+LEAVE DETAILS
+Type: Emergency Leave
+Period: 03/13/2026 to 03/14/2026
+Status: Approved
+Reason: asdasd
