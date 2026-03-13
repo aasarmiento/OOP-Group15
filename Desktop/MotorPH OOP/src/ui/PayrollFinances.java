@@ -58,24 +58,34 @@ public class PayrollFinances extends JPanel {
         filter.setOpaque(false);
 
         monthPicker = new JComboBox<>(new String[]{
-            "January", "February", "March", "April", "May", "June", 
+            "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         });
-        yearPicker = new JComboBox<>(new String[]{"2024", "2025", "2026"});
-        
-        JButton btnRefresh = new JButton("Generate Report");
-        btnRefresh.setBackground(new Color(128, 0, 0));
-        btnRefresh.setForeground(Color.WHITE);
-        btnRefresh.setFocusPainted(false);
-        btnRefresh.addActionListener(e -> refreshData());
 
-        filter.add(new JLabel("Payroll Period:"));
-        filter.add(monthPicker);
-        filter.add(yearPicker);
-        filter.add(btnRefresh);
-        
-        return filter;
-    }
+        yearPicker = new JComboBox<>(new String[]{"2024", "2025", "2026"});
+
+        JButton btnGenerate = new JButton("Generate Payroll");
+        btnGenerate.setBackground(new Color(128, 0, 0));
+        btnGenerate.setForeground(Color.WHITE);
+        btnGenerate.setFocusPainted(false);
+        btnGenerate.setPreferredSize(new Dimension(150, 30));
+        btnGenerate.addActionListener(e -> generatePayroll());
+
+        JButton btnLoad = new JButton("Load Payroll");
+        btnLoad.setBackground(new Color(128, 0, 0));
+        btnLoad.setForeground(Color.WHITE);
+        btnLoad.setFocusPainted(false);
+        btnLoad.setPreferredSize(new Dimension(150, 30));
+        btnLoad.addActionListener(e -> refreshData());
+
+            filter.add(new JLabel("Payroll Period:"));
+            filter.add(monthPicker);
+            filter.add(yearPicker);
+            filter.add(btnGenerate);
+            filter.add(btnLoad);
+
+            return filter;
+        }
 
     private JPanel createKPIRow() {
         JPanel row = new JPanel(new GridLayout(1, 4, 15, 0));
@@ -152,45 +162,92 @@ public class PayrollFinances extends JPanel {
     private void showDetailedRecord(int empId) {
         Employee selectedEmp = empService.getEmployeeDao().findById(empId);
         if (selectedEmp != null) {
-            MyPayslip payslipPanel = new MyPayslip(empService, calc, payrollService, selectedEmp);
-            
+            String month = (String) monthPicker.getSelectedItem();
+            String year = (String) yearPicker.getSelectedItem();
+
+            MyPayslip payslipPanel = new MyPayslip(
+                empService,
+                calc,
+                payrollService,
+                selectedEmp,
+                month,
+                year
+            );
+
             Window parentWindow = SwingUtilities.getWindowAncestor(this);
-            JDialog dialog = new JDialog(parentWindow instanceof Frame ? (Frame)parentWindow : null, "Detailed Record", true);
+            JDialog dialog = new JDialog(
+                parentWindow instanceof Frame ? (Frame) parentWindow : null,
+                "Detailed Record",
+                true
+            );
             dialog.add(new JScrollPane(payslipPanel));
-            dialog.setSize(700, 850); 
+            dialog.setSize(700, 850);
             dialog.setLocationRelativeTo(this);
             dialog.setVisible(true);
         }
     }
 
     public void refreshData() {
-        tableModel.setRowCount(0); 
+        tableModel.setRowCount(0);
+
         String month = (String) monthPicker.getSelectedItem();
         String year = (String) yearPicker.getSelectedItem();
 
         try {
-            List<Object[]> report = payrollService.getFullPayrollReport(month, year);
+            List<Object[]> report = payrollService.loadPayrollBatch(month, year);
+
+            double totalBasic = 0;
+            double totalAllowances = 0;
+            double totalGross = 0;
             double totalNet = 0;
+
             for (Object[] row : report) {
                 Object[] rowData = new Object[9];
-                rowData[0] = row[0]; 
-                rowData[1] = row[1]; 
-                rowData[2] = row[2]; 
-                rowData[3] = df.format(row[3]); 
-                rowData[4] = df.format(row[4]); 
-                rowData[5] = df.format(row[5]); 
-                rowData[6] = df.format(row[6]); 
-                rowData[7] = row[7]; 
-                rowData[8] = "View"; 
-                
+                rowData[0] = row[0]; // ID
+                rowData[1] = row[1]; // Name
+                rowData[2] = row[2]; // Position
+                rowData[3] = df.format((double) row[3]); // Basic Salary
+                rowData[4] = df.format((double) row[4]); // Allowances
+                rowData[5] = df.format((double) row[5]); // Gross Pay
+                rowData[6] = df.format((double) row[6]); // Net Pay
+                rowData[7] = row[7]; // Status
+                rowData[8] = "View";
+
                 tableModel.addRow(rowData);
+
+                totalBasic += (double) row[3];
+                totalAllowances += (double) row[4];
+                totalGross += (double) row[5];
                 totalNet += (double) row[6];
             }
+
+            lblTotalSalary.setText("₱" + df.format(totalBasic));
+            lblTotalAllowances.setText("₱" + df.format(totalAllowances));
+            lblTotalGross.setText("₱" + df.format(totalGross));
             lblTotalNet.setText("₱" + df.format(totalNet));
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading payroll: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
+
+    private void generatePayroll() {
+        String month = (String) monthPicker.getSelectedItem();
+        String year = (String) yearPicker.getSelectedItem();
+
+        try {
+            payrollService.generatePayrollForPeriod(month, year);
+            JOptionPane.showMessageDialog(this, "Payroll batch generated for " + month + " " + year + ".");
+            refreshData();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error generating payroll: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
 
     private JPanel createChartPlaceholder(String titleText) {
         JPanel p = new JPanel(new BorderLayout());

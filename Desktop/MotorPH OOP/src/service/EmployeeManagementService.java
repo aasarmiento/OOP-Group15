@@ -124,6 +124,16 @@ public class EmployeeManagementService {
         }
         emp.setEmpNo(nextId);
 
+        if (emp.getStatus() == null || emp.getStatus().trim().isEmpty()) {
+            emp.setStatus("Probationary");
+        }
+
+        if ("Probationary".equalsIgnoreCase(emp.getStatus())) {
+            emp.setRiceSubsidy(0);
+            emp.setPhoneAllowance(0);
+            emp.setClothingAllowance(0);
+        }
+
         
         double hourly = emp.getBasicSalary() / 21 / 8;
         emp.setHourlyRate(hourly);

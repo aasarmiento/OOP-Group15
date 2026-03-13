@@ -27,6 +27,7 @@ public class AddEmployeePanel extends JPanel {
     private final JTextField clothingAllowance = new JTextField();
     private final JTextField grossRate = new JTextField();
     private final JTextField hourlyRate = new JTextField();
+    
 
     public AddEmployeePanel(EmployeeManagementService service) {
         this.service = service;
@@ -55,6 +56,7 @@ public class AddEmployeePanel extends JPanel {
 
         empNo.setEditable(false);
         updateNextEmployeeID();
+        status.setText("Probationary");
 
         btnAddEmployee.addActionListener(e -> handleAddEmployee());
         btnClear.addActionListener(e -> clearFields());
@@ -86,7 +88,7 @@ public class AddEmployeePanel extends JPanel {
     private void clearFields() {
         lastName.setText("");
         firstName.setText("");
-        status.setText("");
+        status.setText("Probationary");
         position.setText("");
         supervisor.setText("");
         birthday.setText("");
