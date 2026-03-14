@@ -16,7 +16,6 @@ import model.IAdminOperations;
 import model.PeriodSummary;
 import model.RegularStaff;
 
-
 public class EmployeeManagementService {
     private final EmployeeDAO employeeDao;
     private final AttendanceDAO attendanceDao;
@@ -26,31 +25,37 @@ public class EmployeeManagementService {
         this.attendanceDao = attendanceDao;
     }
 
-
-    
-    public List<Employee> getAll() { 
+    public List<Employee> getAll() {
         return employeeDao.getAll();
     }
 
-    
+    public List<Employee> getAllEmployees() {
+        List<Employee> all = new java.util.ArrayList<>(employeeDao.getAll());
+
+        all.removeIf(e ->
+                e.getEmpNo() == 0
+                || e.getLastName().equalsIgnoreCase("asdasdads")
+                || e.getFirstName().equalsIgnoreCase("asdasd"));
+
+        return all;
+    }
+
     public String[] getFormattedDataForForm(Object[] raw) {
         String[] uiData = new String[21];
         if (raw == null) return uiData;
 
         try {
-            uiData[0] = String.valueOf(raw[0]);  // ID
-            uiData[1] = String.valueOf(raw[1]);  // Last Name
-            uiData[2] = String.valueOf(raw[2]);  // First Name
-            
-            uiData[3] = (raw.length > 20 && raw[20] != null) ? String.valueOf(raw[20]) : "N/A"; 
-            
-            uiData[4] = String.valueOf(raw[3]);  // Birthday
-            uiData[5] = String.valueOf(raw[4]);  // Address
-            uiData[6] = String.valueOf(raw[5]);  // Phone
-            uiData[7] = String.valueOf(raw[6]);  // SSS
-            uiData[8] = String.valueOf(raw[7]);  // Philhealth
-            uiData[9] = String.valueOf(raw[8]);  // TIN
-            uiData[10] = String.valueOf(raw[9]); // Pag-ibig
+            uiData[0] = String.valueOf(raw[0]);   // ID
+            uiData[1] = String.valueOf(raw[1]);   // Last Name
+            uiData[2] = String.valueOf(raw[2]);   // First Name
+            uiData[3] = (raw.length > 20 && raw[20] != null) ? String.valueOf(raw[20]) : "N/A"; // Gender
+            uiData[4] = String.valueOf(raw[3]);   // Birthday
+            uiData[5] = String.valueOf(raw[4]);   // Address
+            uiData[6] = String.valueOf(raw[5]);   // Phone
+            uiData[7] = String.valueOf(raw[6]);   // SSS
+            uiData[8] = String.valueOf(raw[7]);   // Philhealth
+            uiData[9] = String.valueOf(raw[8]);   // TIN
+            uiData[10] = String.valueOf(raw[9]);  // Pag-ibig
             uiData[11] = String.valueOf(raw[10]); // Status
             uiData[12] = String.valueOf(raw[11]); // Position
             uiData[13] = String.valueOf(raw[12]); // Supervisor
@@ -63,64 +68,76 @@ public class EmployeeManagementService {
             uiData[20] = String.valueOf(raw[19]); // Role
         } catch (Exception e) {
             System.err.println("Mapping Error at Service Layer: " + e.getMessage());
-            for(int i=0; i<uiData.length; i++) if(uiData[i] == null) uiData[i] = "";
+            for (int i = 0; i < uiData.length; i++) {
+                if (uiData[i] == null) uiData[i] = "";
+            }
         }
+
         return uiData;
     }
-
-   public List<Employee> getAllEmployees() {
-    List<Employee> all = new java.util.ArrayList<>(employeeDao.getAll());
-    
-    all.removeIf(e -> e.getEmpNo() == 0 || 
-                      e.getLastName().equalsIgnoreCase("asdasdads") || 
-                      e.getFirstName().equalsIgnoreCase("asdasd"));
-    
-    return all;
-}
 
     public Object[] getEmployeeDetailsForForm(int empId) {
         Employee emp = employeeDao.findById(empId);
         if (emp == null) return null;
 
-        return new Object[] {
-            emp.getEmpNo(), emp.getLastName(), emp.getFirstName(), emp.getBirthday(),
-            emp.getAddress(), emp.getPhone(), emp.getSss(), emp.getPhilhealth(),
-            emp.getTin(), emp.getPagibig(), emp.getStatus(), emp.getPosition(),
-            emp.getSupervisor(), String.format("%.0f", emp.getBasicSalary()),
-            String.format("%.0f", emp.getRiceSubsidy()), String.format("%.0f", emp.getPhoneAllowance()),
-            String.format("%.0f", emp.getClothingAllowance()), String.format("%.0f", emp.getGrossRate()),
-            String.format("%.0f", emp.getHourlyRate()), emp.getRole(), emp.getGender()
+        return new Object[]{
+            emp.getEmpNo(),
+            emp.getLastName(),
+            emp.getFirstName(),
+            emp.getBirthday(),
+            emp.getAddress(),
+            emp.getPhone(),
+            emp.getSss(),
+            emp.getPhilhealth(),
+            emp.getTin(),
+            emp.getPagibig(),
+            emp.getStatus(),
+            emp.getPosition(),
+            emp.getSupervisor(),
+            String.format("%.0f", emp.getBasicSalary()),
+            String.format("%.0f", emp.getRiceSubsidy()),
+            String.format("%.0f", emp.getPhoneAllowance()),
+            String.format("%.0f", emp.getClothingAllowance()),
+            String.format("%.0f", emp.getGrossRate()),
+            String.format("%.0f", emp.getHourlyRate()),
+            emp.getRole(),
+            emp.getGender()
         };
     }
-
 
     public boolean processNewHire(Employee actor, String fName, String lName, String sss, double salary) {
         if (!(actor instanceof IAdminOperations)) {
             showError("Access Denied: Only Admins can register employees.");
             return false;
         }
+
         Employee newEmp = new RegularStaff();
         newEmp.setFirstName(fName);
         newEmp.setLastName(lName);
         newEmp.setSss(sss);
         newEmp.setBasicSalary(salary);
+        newEmp.setStatus("Probationary");
+
+        // These will be zeroed out in registerEmployee because status is probationary.
         newEmp.setRiceSubsidy(1500);
         newEmp.setPhoneAllowance(500);
         newEmp.setClothingAllowance(1000);
-        return registerEmployee((IAdminOperations)actor, newEmp);
+
+        return registerEmployee((IAdminOperations) actor, newEmp);
     }
 
-  public boolean registerEmployee(IAdminOperations actor, Employee emp) {
+    public boolean registerEmployee(IAdminOperations actor, Employee emp) {
         if (actor == null || emp == null) return false;
 
-        if (emp.getFirstName().trim().isEmpty() || emp.getLastName().trim().isEmpty()) {
+        if (emp.getFirstName() == null || emp.getFirstName().trim().isEmpty()
+                || emp.getLastName() == null || emp.getLastName().trim().isEmpty()) {
             showError("First and Last names are required!");
             return false;
         }
 
         int nextId = employeeDao.getNextAvailableId();
         if (nextId <= 0) {
-            nextId = 10001; 
+            nextId = 10001;
         }
         emp.setEmpNo(nextId);
 
@@ -134,14 +151,13 @@ public class EmployeeManagementService {
             emp.setClothingAllowance(0);
         }
 
-        
         double hourly = emp.getBasicSalary() / 21 / 8;
         emp.setHourlyRate(hourly);
-        
-        double totalGross = emp.getBasicSalary() + 
-                            emp.getRiceSubsidy() + 
-                            emp.getPhoneAllowance() + 
-                            emp.getClothingAllowance();
+
+        double totalGross = emp.getBasicSalary()
+                + emp.getRiceSubsidy()
+                + emp.getPhoneAllowance()
+                + emp.getClothingAllowance();
         emp.setGrossRate(totalGross);
 
         return employeeDao.addEmployee(emp);
@@ -149,20 +165,22 @@ public class EmployeeManagementService {
 
     public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
         try {
-            if (!(actor instanceof IAdminOperations)) { 
-                showError("Access Denied."); 
-                return false; 
+            if (!(actor instanceof IAdminOperations)) {
+                showError("Access Denied.");
+                return false;
             }
-            
+
             String bdayText = fields[4].getText().trim();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-            LocalDate birthday = bdayText.contains("-") ? LocalDate.parse(bdayText) : LocalDate.parse(bdayText, formatter);
+            LocalDate birthday = bdayText.contains("-")
+                    ? LocalDate.parse(bdayText)
+                    : LocalDate.parse(bdayText, formatter);
 
             Employee emp = new RegularStaff();
             emp.setEmpNo(Integer.parseInt(fields[0].getText().trim()));
             emp.setLastName(fields[1].getText().trim());
             emp.setFirstName(fields[2].getText().trim());
-            emp.setGender(fields[3].getText().trim()); 
+            emp.setGender(fields[3].getText().trim());
             emp.setBirthday(birthday);
             emp.setAddress(fields[5].getText().trim());
             emp.setPhone(fields[6].getText().trim());
@@ -174,17 +192,28 @@ public class EmployeeManagementService {
             emp.setPosition(fields[12].getText().trim());
             emp.setSupervisor(fields[13].getText().trim());
 
-            
             double basic = parseDouble(fields[14].getText());
             emp.setBasicSalary(basic);
-            emp.setRiceSubsidy(parseDouble(fields[15].getText()));
-            emp.setPhoneAllowance(parseDouble(fields[16].getText()));
-            emp.setClothingAllowance(parseDouble(fields[17].getText()));
-            
-            emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
-            
+
+            if ("Probationary".equalsIgnoreCase(emp.getStatus())) {
+                emp.setRiceSubsidy(0);
+                emp.setPhoneAllowance(0);
+                emp.setClothingAllowance(0);
+            } else {
+                emp.setRiceSubsidy(parseDouble(fields[15].getText()));
+                emp.setPhoneAllowance(parseDouble(fields[16].getText()));
+                emp.setClothingAllowance(parseDouble(fields[17].getText()));
+            }
+
+            emp.setGrossRate(
+                    emp.getBasicSalary()
+                    + emp.getRiceSubsidy()
+                    + emp.getPhoneAllowance()
+                    + emp.getClothingAllowance()
+            );
+
             double calculatedHourly = basic / 21 / 8;
-            emp.setHourlyRate(calculatedHourly); 
+            emp.setHourlyRate(calculatedHourly);
 
             return employeeDao.update(emp);
         } catch (Exception e) {
@@ -196,7 +225,7 @@ public class EmployeeManagementService {
     public PeriodSummary getPayrollForEmployee(int empNo, String month, String year) {
         Employee emp = employeeDao.findById(empNo);
         Object[][] logs = attendanceDao.getAttendanceByMonth(empNo, month, year);
-        service.PayrollCalculator calc = new service.PayrollCalculator();
+        PayrollCalculator calc = new PayrollCalculator();
         PayrollService payrollService = new PayrollService(employeeDao, calc, this);
         DateTimeFormatter csvDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         double totalHours = 0;
@@ -204,14 +233,18 @@ public class EmployeeManagementService {
         for (Object[] row : logs) {
             try {
                 model.Attendance record = new model.Attendance(
-                    empNo, LocalDate.parse(row[0].toString().trim(), csvDateFormatter),
-                    row[1].equals("N/A") ? null : java.time.LocalTime.parse(row[1].toString().trim()),
-                    row[2].equals("N/A") ? null : java.time.LocalTime.parse(row[2].toString().trim())
+                        empNo,
+                        LocalDate.parse(row[0].toString().trim(), csvDateFormatter),
+                        row[1].equals("N/A") ? null : java.time.LocalTime.parse(row[1].toString().trim()),
+                        row[2].equals("N/A") ? null : java.time.LocalTime.parse(row[2].toString().trim())
                 );
-                payrollService.processAttendance(record); 
+                payrollService.processAttendance(record);
                 totalHours += record.getHoursWorked();
-            } catch (Exception e) { System.err.println("Attendance Record Error: " + e.getMessage()); }
+            } catch (Exception e) {
+                System.err.println("Attendance Record Error: " + e.getMessage());
+            }
         }
+
         double grossIncome = calc.calculateGrossIncome(emp, totalHours);
         return calc.calculateFullSummary(emp, grossIncome);
     }
@@ -219,33 +252,70 @@ public class EmployeeManagementService {
     public void recordTimeLog(int empNo, String type) {
         Employee emp = employeeDao.findById(empNo);
         String action = type.toLowerCase().contains("in") ? "Check-in" : "Check-out";
-        attendanceDao.recordAttendance(empNo, (emp != null ? emp.getLastName() : "Unknown"), (emp != null ? emp.getFirstName() : "Unknown"), action);
+        attendanceDao.recordAttendance(
+                empNo,
+                (emp != null ? emp.getLastName() : "Unknown"),
+                (emp != null ? emp.getFirstName() : "Unknown"),
+                action
+        );
     }
 
     public Object[][] getAttendanceLogs(int empNo, String month, String year) {
         return attendanceDao.getAttendanceByMonth(empNo, month, year);
     }
 
-
     public String[] getSupervisorsForPosition(String position) {
         if (position == null) return new String[]{"N/A"};
+
         switch (position) {
-            case "Chief Operating Officer": case "Chief Finance Officer": case "Chief Marketing Officer": case "Account Manager": return new String[]{"Garcia, Manuel III"};
-            case "IT Operations and Systems": case "HR Manager": return new String[]{"Lim, Antonio"};
-            case "HR Team Leader": return new String[]{"Villanueva, Andrea Mae"};
-            case "HR Rank and File": return new String[]{"San Jose, Brad"};
-            case "Accounting Head": return new String[]{"Aquino, Bianca Sofia"};
-            case "Payroll Manager": return new String[]{"Alvaro, Roderick"};
-            case "Payroll Team Leader": case "Payroll Rank and File": return new String[]{"Salcedo, Anthony"};
-            case "Account Team Leader": return new String[]{"Romualdez, Fredrick"};
-            case "Account Rank and File": return new String[]{"Mata, Christian", "De Leon, Selena"};
-            case "Sales & Marketing": case "Supply Chain and Logistics": case "Customer Service and Relations": return new String[]{"Reyes, Isabella"};
-            default: return new String[]{"N/A"};
+            case "Chief Operating Officer":
+            case "Chief Finance Officer":
+            case "Chief Marketing Officer":
+            case "Account Manager":
+                return new String[]{"Garcia, Manuel III"};
+
+            case "IT Operations and Systems":
+            case "HR Manager":
+                return new String[]{"Lim, Antonio"};
+
+            case "HR Team Leader":
+                return new String[]{"Villanueva, Andrea Mae"};
+
+            case "HR Rank and File":
+                return new String[]{"San Jose, Brad"};
+
+            case "Accounting Head":
+                return new String[]{"Aquino, Bianca Sofia"};
+
+            case "Payroll Manager":
+                return new String[]{"Alvaro, Roderick"};
+
+            case "Payroll Team Leader":
+            case "Payroll Rank and File":
+                return new String[]{"Salcedo, Anthony"};
+
+            case "Account Team Leader":
+                return new String[]{"Romualdez, Fredrick"};
+
+            case "Account Rank and File":
+                return new String[]{"Mata, Christian", "De Leon, Selena"};
+
+            case "Sales & Marketing":
+            case "Supply Chain and Logistics":
+            case "Customer Service and Relations":
+                return new String[]{"Reyes, Isabella"};
+
+            default:
+                return new String[]{"N/A"};
         }
     }
 
     private double parseDouble(String input) {
-        try { return Double.parseDouble(input.trim().replace(",", "")); } catch (Exception e) { return 0.0; }
+        try {
+            return Double.parseDouble(input.trim().replace(",", ""));
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 
     private void showError(String msg) {
@@ -260,14 +330,15 @@ public class EmployeeManagementService {
 
         if (id == 10001) {
             showError("System Error: This account is protected and cannot be deleted.");
-            return false; 
+            return false;
         }
 
         return employeeDao.deleteEmployee(id);
     }
 
     public boolean[] getButtonStates(int empNo) {
-        boolean[] states = {true, false}; 
+        boolean[] states = {true, false};
+
         try {
             String lastStatus = attendanceDao.getLastStatus(empNo);
             if ("Check-in".equalsIgnoreCase(lastStatus)) {
@@ -280,11 +351,12 @@ public class EmployeeManagementService {
         } catch (Exception e) {
             System.err.println("Error fetching button states: " + e.getMessage());
         }
+
         return states;
     }
 
     public EmployeeDAO getEmployeeDao() {
-        return this.employeeDao;
+        return employeeDao;
     }
 
     public int generateNextEmployeeId() {
@@ -293,8 +365,8 @@ public class EmployeeManagementService {
 
     public void updateEmployeePhoto(Employee emp, File selectedFile) {
         try {
-            if (!selectedFile.getName().toLowerCase().endsWith(".png") && 
-                !selectedFile.getName().toLowerCase().endsWith(".jpg")) {
+            if (!selectedFile.getName().toLowerCase().endsWith(".png")
+                    && !selectedFile.getName().toLowerCase().endsWith(".jpg")) {
                 throw new IllegalArgumentException("Only PNG or JPG allowed.");
             }
 
@@ -306,7 +378,7 @@ public class EmployeeManagementService {
             emp.setPhotoPath(newPath);
 
             employeeDao.update(emp);
-            
+
         } catch (IOException e) {
             showError("Failed to save image: " + e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -314,11 +386,6 @@ public class EmployeeManagementService {
         }
     }
 
-
-
-
-
-   
     public double[] getStandardAllowances(String position) {
         if (position == null) return new double[]{1500, 500, 500};
 
@@ -346,19 +413,15 @@ public class EmployeeManagementService {
         }
     }
 
-   public ImageIcon getEmployeePhoto(int empId, int width, int height) {
+    public ImageIcon getEmployeePhoto(int empId, int width, int height) {
         File photoFile = employeeDao.getEmployeePhotoFile(empId);
-        
+
         if (photoFile != null && photoFile.exists()) {
             ImageIcon icon = new ImageIcon(photoFile.getAbsolutePath());
-            
             Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            
             return new ImageIcon(img);
         }
-        
-        return null; 
-    }
 
-   
+        return null;
+    }
 }

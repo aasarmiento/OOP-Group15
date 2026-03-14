@@ -1,9 +1,9 @@
 package ui;
 
 import dao.AttendanceDAO;
-import dao.ITTicketDAOImpl;
-import dao.ITTicketDao;
-import dao.UserLibrary; 
+import dao.ITTicketCSVHandler;
+import dao.ITTicketDao; 
+import dao.UserLibrary;
 import java.awt.*;
 import java.io.File;
 import java.time.format.DateTimeFormatter;
@@ -77,7 +77,7 @@ public class DashboardPanel extends JFrame {
         this.userFirstname = user.getFirstName();
         this.userLastname = user.getLastName();
 
-        ITTicketDao itTicketDao = new ITTicketDAOImpl(); 
+        ITTicketDao itTicketDao = new ITTicketCSVHandler();
         ITSupportService itService = new ITSupportService(itTicketDao, employeeService.getEmployeeDao());
         this.leaveService = new LeaveService(employeeService.getEmployeeDao(), attendanceDao);
 

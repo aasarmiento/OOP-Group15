@@ -1,34 +1,42 @@
-EmployeeNo,Username,Last Name,First Name,Password,AccessLevel
-10001,MGarcia,Garcia,Manuel III,1234,Admin
-10002,Alim,Lim,Antonio,1234,Admin
-10003,Baquino,Aquino,Bianca Sofia,1234,Admin
-10004,Ireyes,Reyes,Isabella,1234,Admin
-10005,Ehernandez,Hernandez,Eduard,1234,IT
-10006,Avillanueva,Villanueva,Andrea Mae,1234,Hr
-10007,BSanJose,San Jose,Brad,1234,Hr
-10008,Aromualdez,Romualdez,Alice,1234,Hr
-10009,Ratienza,Atienza,Rosie ,1234,Hr
-10010,Ralvaro,Alvaro,Roderick,1234,Accounting
-10011,Asalcedo,Salcedo,Anthony,1234,Accounting
-10012,Jlopez,Lopez,Josie ,1234,Accounting
-10013,Mfarala,Farala,Martha,1234,Accounting
-10014,Lmartinez,Martinez,Leila,1234,Accounting
-10015,Fromualdez,Romualdez,Fredrick ,1234,Accounting
-10016,Cmata,Mata,Christian,1234,Employee
-10017,SDe Leon,De Leon,Selena ,1234,Employee
-10018,ASanJose,San Jose,Allison ,1234,Employee
-10019,Crosario,Rosario,Cydney ,1234,Employee
-10020,Mbautista,Bautista,Mark ,1234,Employee
-10022,KDelosSantos,Delos Santos,Kolby ,1234,Employee
-10023,Vsantos,Santos,Vella ,1234,Employee
-10024,TDelRosario,Del Rosario,Tomas,1234,Employee
-10025,Jtolentino,Tolentino,Jacklyn ,1234,Employee
-10026,Pgutierrez,Gutierrez,Percival ,1234,Employee
-10027,Mmanalaysay,Manalaysay,Garfield ,1234,Employee
-10028,Lvillegas,Villegas,Lizeth ,1234,Employee
-10029,CRamos,Ramos,Carol ,1234,Employee
-10030,EMaceda,Maceda,Emelia ,1234,Employee
-10031,Daguilar,Aguilar,Delia ,1234,Employee
-10032,Jcastro,Castro,John Rafael,1234,Employee
-10033,Cmartinez,Martinez,Carlos Ian,1234,Employee
-10034,Bsantos,Santos,Beatriz,1234,Employee
+Employee #,Username,MustChangePassword,TemporaryPasswordActive,Password,Role
+10001,mgarcia,false,false,1234,ADMIN
+10002,alim,false,false,1234,ADMIN
+10003,baquino,false,false,1234,ADMIN
+10004,ireyes,false,false,1234,ADMIN
+10005,ehernandez,false,false,1234,IT_STAFF
+10006,avillanueva,false,false,1234,HR_STAFF
+10007,bsanjose,false,false,1234,HR_STAFF
+10008,aromualdez,false,false,1234,HR_STAFF
+10009,ratienza,false,false,1234,HR_STAFF
+10010,ralvaro,false,false,1234,ACCOUNTING
+10011,asalcedo,false,false,1234,ACCOUNTING
+10012,jlopez,false,false,1234,ACCOUNTING
+10013,mfarala,false,false,1234,ACCOUNTING
+10014,lmartinez,false,false,1234,ACCOUNTING
+10015,fromualdez,false,false,1234,ACCOUNTING
+10016,cmata,false,false,1234,REGULAR_STAFF
+10017,sdeleon,false,false,1234,REGULAR_STAFF
+10018,asanjose,false,false,1234,REGULAR_STAFF
+10019,crosario,false,false,1234,REGULAR_STAFF
+10020,mbautista,false,false,1234,REGULAR_STAFF
+10021,dlazaro,false,false,,REGULAR_STAFF
+10022,kdelossantos,false,false,1234,REGULAR_STAFF
+10023,vsantos,false,false,1234,REGULAR_STAFF
+10024,tdelrosario,false,false,1234,REGULAR_STAFF
+10025,jtolentino,false,false,1234,REGULAR_STAFF
+10026,pgutierrez,false,false,1234,REGULAR_STAFF
+10027,gmanalaysay,false,false,1234,REGULAR_STAFF
+10028,lvillegas,false,false,1234,REGULAR_STAFF
+10029,cramos,false,false,1234,REGULAR_STAFF
+10030,emaceda,false,false,1234,REGULAR_STAFF
+10031,daguilar,false,false,1234,REGULAR_STAFF
+10032,jcastro,false,false,1234,REGULAR_STAFF
+10033,cmartinez,false,false,1234,REGULAR_STAFF
+10034,bsantos,false,false,123456,REGULAR_STAFF
+10035,aasdasdadsads,false,false,,REGULAR_STAFF
+10036,aasdasd,false,false,,REGULAR_STAFF
+10037,adelacruz,false,false,,REGULAR_STAFF
+10038,dasdadsadsads,false,false,,REGULAR_STAFF
+10039,jdelacruz,false,false,,REGULAR_STAFF
+10041,ddfssdfssdf,false,false,,REGULAR_STAFF
+10042,mjordan,false,false,,REGULAR_STAFF

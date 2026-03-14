@@ -65,12 +65,28 @@ public class ITApprovalPanel extends JPanel {
 
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setOpaque(false);
-        
+
         btnResolve = new StyledButton("Mark as Resolved", new Color(0, 102, 51));
         btnResolve.setPreferredSize(new Dimension(180, 40));
         btnResolve.addActionListener(e -> handleResolve());
-        
+
+        JButton btnReopen = new StyledButton("Reopen Ticket", primaryMaroon);
+        btnReopen.setPreferredSize(new Dimension(160, 40));
+        btnReopen.addActionListener(e -> handleReopen());
+
+        JButton btnDelete = new StyledButton("Delete Ticket", Color.DARK_GRAY);
+        btnDelete.setPreferredSize(new Dimension(140, 40));
+        btnDelete.addActionListener(e -> handleDelete());
+
+        JButton btnTempPassword = new StyledButton("Generate Temp Password", new Color(0, 102, 102));
+        btnTempPassword.setPreferredSize(new Dimension(220, 40));
+        btnTempPassword.addActionListener(e -> handleGenerateTempPassword());
+
+        footerPanel.add(btnTempPassword);
+        footerPanel.add(btnReopen);
+        footerPanel.add(btnDelete);
         footerPanel.add(btnResolve);
+
         mainCard.add(footerPanel, BorderLayout.SOUTH);
 
         add(mainCard, BorderLayout.CENTER);
@@ -207,4 +223,89 @@ public class ITApprovalPanel extends JPanel {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Security Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    private void handleReopen() {
+    int row = table.getSelectedRow();
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Select a ticket to reopen.");
+        return;
+    }
+
+    int ticketId = (int) table.getValueAt(row, 0);
+    try {
+        itService.reopenTicket(ticketId, currentUser);
+        JOptionPane.showMessageDialog(this, "Ticket #" + ticketId + " reopened.");
+        refreshUI();
+    } catch (SecurityException ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage(), "Security Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+    private void handleDelete() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Select a ticket to delete.");
+            return;
+        }
+
+        int ticketId = (int) table.getValueAt(row, 0);
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Delete ticket #" + ticketId + "?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+            try {
+                itService.deleteTicket(ticketId, currentUser);
+                JOptionPane.showMessageDialog(this, "Ticket #" + ticketId + " deleted.");
+                refreshUI();
+            } catch (SecurityException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Security Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+    private void handleGenerateTempPassword() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Select a forgot-password ticket.");
+            return;
+        }
+
+        int ticketId = (int) table.getValueAt(row, 0);
+        ITTicket ticket = itService.getTicketById(ticketId);
+
+        if (ticket == null) {
+            JOptionPane.showMessageDialog(this, "Ticket not found.");
+            return;
+        }
+
+        if (!"FORGOT_PASSWORD".equalsIgnoreCase(ticket.getIssueType())) {
+            JOptionPane.showMessageDialog(this, "This action is only for forgot-password tickets.");
+            return;
+        }
+
+        try {
+            String tempPassword = itService.generateTemporaryPasswordForEmployee(ticket.getEmployeeNo(), currentUser);
+
+            if (tempPassword == null) {
+                JOptionPane.showMessageDialog(this, "Unable to generate temporary password.");
+                return;
+            }
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Temporary password created for Employee #" + ticket.getEmployeeNo()
+                + ":\n" + tempPassword
+                + "\n\nSend this to the employee through approved channels."
+            );
+
+        } catch (SecurityException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Security Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
 }

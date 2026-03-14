@@ -48,4 +48,7 @@ List<Employee> getAllEmployees();
     void saveProfilePicture(int empNo, File sourceFile) throws IOException;
 
      public File getEmployeePhotoFile(int empId);
+
+
+boolean setPasswordResetState(int empNo, String password, boolean mustChange, boolean tempActive);
 }

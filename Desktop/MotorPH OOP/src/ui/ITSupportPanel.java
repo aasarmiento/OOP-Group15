@@ -260,10 +260,15 @@ public class ITSupportPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Please describe the issue.");
             return;
         }
-        boolean success = itService.submitNewTicket(
-            currentUser.getEmpNo(), currentUser.getFirstName(), 
-            currentUser.getFirstName() + " " + currentUser.getLastName(), type, desc
-        );
+
+    boolean success = itService.submitNewTicket(
+        currentUser.getEmpNo(),
+        currentUser.getUsername(),
+        currentUser.getFullName(),
+        type,
+        desc
+    );
+        
         if (success) {
             JOptionPane.showMessageDialog(this, "Ticket Submitted!");
             txtDescription.setText("");

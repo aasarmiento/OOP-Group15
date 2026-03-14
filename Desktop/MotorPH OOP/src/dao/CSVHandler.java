@@ -41,9 +41,8 @@ public class CSVHandler implements EmployeeDAO {
     public void unlockAccount(int employeeNo) {
         Employee emp = findById(employeeNo);
         if (emp != null) {
-           
-            emp.setStatus("Active"); 
-            saveAllToCSV();
+            emp.setAccountStatus("ACTIVE");
+            saveLoginDataCSV();
         }
     }
 
@@ -109,14 +108,24 @@ public class CSVHandler implements EmployeeDAO {
                     try {
                         int id = Integer.parseInt(loginData[0].replace("\uFEFF", "").trim());
                         Employee baseEmp = employeeCache.get(id);
+
                         if (baseEmp != null) {
+                            String username = loginData[1].trim();
+                            boolean mustChange = Boolean.parseBoolean(loginData[2].trim());
+                            boolean tempActive = Boolean.parseBoolean(loginData[3].trim());
+                            String password = loginData[4].trim();
                             String roleStr = loginData[5].trim();
+
                             Employee upgraded = upgradeEmployeeRole(baseEmp, roleStr);
-                            upgraded.setPassword(loginData[4].trim());
+                            upgraded.setPassword(password);
+                            upgraded.setMustChangePassword(mustChange);
+                            upgraded.setTemporaryPasswordActive(tempActive);
+
                             employeeCache.put(id, upgraded);
-                            usernameCache.put(loginData[1].trim().toLowerCase(), upgraded);
+                            usernameCache.put(username.toLowerCase(), upgraded);
                         }
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                    }
                 }
             }
         } catch (IOException e) { 
@@ -247,7 +256,7 @@ public class CSVHandler implements EmployeeDAO {
     @Override public Object[][] getAllLeaveRequests() { return new Object[0][0]; }
     @Override public void updateLeaveStatus(String reqId, String stat) {}
     @Override public void updateEmployeeStatus(int id, String stat) { update(findById(id)); }
-    @Override public void saveNewPassword(int id, String pass) {}
+   
     @Override public List<LeaveRequest> getAllLeaveRequestsList() { return new ArrayList<>(); }
 
     @Override
@@ -261,7 +270,6 @@ public class CSVHandler implements EmployeeDAO {
         return getLastEmployeeNumber() + 1;
     }
 
-    @Override
     public Object[][] getAttendanceByMonth(int empNo, String month, String year) {
         List<Object[]> matchingLogs = new ArrayList<>();
         String attendanceFile = "resources/MotorPH_AttendanceRecord.csv";
@@ -332,4 +340,56 @@ public class CSVHandler implements EmployeeDAO {
 private String getFileExtension(String fileName) {
     return fileName.substring(fileName.lastIndexOf("."));
 }
+
+@Override
+public void saveNewPassword(int id, String pass) {
+    Employee emp = findById(id);
+    if (emp == null) return;
+
+    emp.setPassword(pass);
+    saveLoginDataCSV();
+}
+
+@Override
+public boolean setPasswordResetState(int empNo, String password, boolean mustChange, boolean tempActive) {
+    Employee emp = findById(empNo);
+    if (emp == null) {
+        return false;
+    }
+
+    emp.setPassword(password);
+    emp.setMustChangePassword(mustChange);
+    emp.setTemporaryPasswordActive(tempActive);
+
+    saveLoginDataCSV();
+
+        return true;
+    }
+
+    private boolean saveLoginDataCSV() {
+    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_CSV)))) {
+        writer.println("Employee #,Username,MustChangePassword,TemporaryPasswordActive,Password,Role");
+
+        for (Employee e : employeeCache.values()) {
+            String username = e.getUsername() != null ? e.getUsername() : "";
+            String password = e.getPassword() != null ? e.getPassword() : "";
+            String roleStr = (e.getRole() != null) ? e.getRole().name() : "REGULAR_STAFF";
+
+            writer.printf("%d,%s,%b,%b,%s,%s%n",
+                    e.getEmpNo(),
+                    username,
+                    e.isMustChangePassword(),
+                    e.isTemporaryPasswordActive(),
+                    password,
+                    roleStr
+            );
+        }
+
+        writer.flush();
+        return true;
+    } catch (IOException e) {
+        System.err.println("Login CSV save error: " + e.getMessage());
+            return false;
+        }
+    }
 }

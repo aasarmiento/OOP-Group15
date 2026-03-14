@@ -50,49 +50,114 @@ public class ITTicket {
     }
 
     public void markResolved(String resolverName) {
-    this.status = "RESOLVED";
-    this.resolvedBy = resolverName;
-    this.resolvedAt = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-}
+        this.status = "RESOLVED";
+        this.resolvedBy = resolverName;
+        this.resolvedAt = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+    }
 
-    // Inside ITTicket.java
-public void setStatus(String status) {
-    this.status = status;
-}
+    public void reopen() {
+        this.status = "OPEN";
+        this.resolvedAt = "";
+        this.resolvedBy = "";
+    }
 
-public void setResolvedBy(String resolvedBy) {
-    this.resolvedBy = resolvedBy;
-}
+    public int getTicketId() {
+        return ticketId;
+    }
 
-public void setResolvedAt(String resolvedAt) {
-    this.resolvedAt = resolvedAt;
-}
+    public int getEmployeeNo() {
+        return employeeNo;
+    }
 
-    // Getters and Setters
-    public int getTicketId() { return ticketId; }
-    public int getEmployeeNo() { return employeeNo; }
-    public String getUsername() { return username; }
-    public String getFullName() { return fullName; }
-    public String getIssueType() { return issueType; }
-    public String getDescription() { return description; }
-    public String getStatus() { return status; }
-    public String getCreatedAt() { return createdAt; }
-    public String getResolvedAt() { return resolvedAt; }
-    public String getResolvedBy() { return resolvedBy; }
+    public String getUsername() {
+        return username;
+    }
 
+    public String getFullName() {
+        return fullName;
+    }
 
-public void setTicketId(int ticketId) { this.ticketId = ticketId; }
-    public void setEmployeeNo(int employeeNo) { this.employeeNo = employeeNo; }
-    public void setUsername(String username) { this.username = username; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-    public void setIssueType(String issueType) { this.issueType = issueType; }
-    public void setDescription(String description) { this.description = description; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-   
-public String toCSV() {
-    return String.format("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
-        ticketId, employeeNo, username, fullName, 
-        issueType, description, status, createdAt, 
-        resolvedAt, resolvedBy);
-}
+    public String getIssueType() {
+        return issueType;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public String getResolvedBy() {
+        return resolvedBy;
+    }
+
+    public void setTicketId(int ticketId) {
+        this.ticketId = ticketId;
+    }
+
+    public void setEmployeeNo(int employeeNo) {
+        this.employeeNo = employeeNo;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public void setIssueType(String issueType) {
+        this.issueType = issueType;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setResolvedAt(String resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+    public void setResolvedBy(String resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
+
+    public String toCSV() {
+        return String.format(
+                "%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+                ticketId,
+                employeeNo,
+                escape(username),
+                escape(fullName),
+                escape(issueType),
+                escape(description),
+                escape(status),
+                escape(createdAt),
+                escape(resolvedAt),
+                escape(resolvedBy)
+        );
+    }
+
+    private String escape(String value) {
+        return value == null ? "" : value.replace("\"", "\"\"");
+    }
 }

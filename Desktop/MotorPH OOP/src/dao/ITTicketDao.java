@@ -5,9 +5,12 @@ import model.ITTicket;
 
 public interface ITTicketDao {
     List<ITTicket> getAllTickets();
-    boolean saveTicket(ITTicket ticket);
-    void updateAllTickets(List<ITTicket> tickets);
+    ITTicket findById(int ticketId);
+    List<ITTicket> findByEmployeeNo(int empNo);
 
+    boolean addTicket(ITTicket ticket);
+    boolean updateTicket(ITTicket ticket);
+    boolean deleteTicket(int ticketId);
 
-    public boolean addTicket(ITTicket ticket);
+    int getNextTicketId();
 }

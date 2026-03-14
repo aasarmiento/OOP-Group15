@@ -6,6 +6,7 @@ import java.awt.*;
 import javax.swing.*;
 import model.Employee;
 import service.EmployeeManagementService;
+import service.ITSupportService;
 
 public class LoginPanel extends JFrame {
 
@@ -141,7 +142,7 @@ public class LoginPanel extends JFrame {
         forgotBtn.setBorderPainted(false);
         forgotBtn.setContentAreaFilled(false);
         forgotBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        forgotBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Contact IT Support."));
+        forgotBtn.addActionListener(e -> handleForgotPassword());
         
         options.add(showPass, BorderLayout.WEST);
         options.add(forgotBtn, BorderLayout.EAST);
@@ -176,20 +177,21 @@ public class LoginPanel extends JFrame {
     }
 
     private void handleLogin() {
-        String username = empField.getText().trim();
-        String password = new String(passField.getPassword()).trim();
+    String username = empField.getText().trim();
+    String password = new String(passField.getPassword()).trim();
 
-        if (authService.authenticate(username, password)) {
-            Employee user = authService.getLoggedInEmployee();
-            if (user != null) {
-                navigateToDashboard(user);
+    if (authService.authenticate(username, password)) {
+        if (authService.requiresPasswordChange()) {
+            showChangePasswordDialog();
+        } else {
+            navigateToDashboard(UserLibrary.getLoggedInEmployee());
+        }
             } else {
                 handleFailedAttempt();
             }
-        } else {
-            handleFailedAttempt();
         }
-    }
+
+
 
     private void navigateToDashboard(Employee user) {
         this.dispose(); 
@@ -204,4 +206,100 @@ public class LoginPanel extends JFrame {
         }
         JOptionPane.showMessageDialog(this, "Invalid credentials. Attempts left: " + (3 - loginAttempts));
     }
+
+
+private void handleForgotPassword() {
+    String empNoText = JOptionPane.showInputDialog(
+            this,
+            "Enter your Employee ID:",
+            "Forgot Password",
+            JOptionPane.PLAIN_MESSAGE
+    );
+
+    if (empNoText == null) return;
+    empNoText = empNoText.trim();
+
+    if (empNoText.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Employee ID is required.");
+        return;
+    }
+
+    try {
+        int empNo = Integer.parseInt(empNoText);
+
+        ITSupportService itService = new ITSupportService(
+                new dao.ITTicketCSVHandler(),
+                employeeService.getEmployeeDao()
+        );
+
+        boolean success = itService.submitForgotPasswordTicketByEmployeeId(empNo);
+
+        if (success) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Your request has been submitted. IT will email you a temporary password."
+            );
+        } else {
+            JOptionPane.showMessageDialog(this, "Employee ID not found.");
+        }
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Employee ID must be numeric.");
+            }
+        }
+
+        private void showChangePasswordDialog() {
+        Employee current = UserLibrary.getLoggedInEmployee();
+        if (current == null) {
+            JOptionPane.showMessageDialog(this, "No active user session found.");
+            return;
+        }
+
+        JPasswordField newPassField = new JPasswordField();
+        JPasswordField confirmField = new JPasswordField();
+
+        Object[] message = {
+            "Enter new password (minimum 6 characters):", newPassField,
+            "Confirm new password:", confirmField
+        };
+
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                message,
+                "Change Temporary Password",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String newPass = new String(newPassField.getPassword()).trim();
+        String confirm = new String(confirmField.getPassword()).trim();
+
+        if (newPass.length() < 6) {
+            JOptionPane.showMessageDialog(this, "Password must be at least 6 characters.");
+            return;
+        }
+
+        if (!newPass.equals(confirm)) {
+            JOptionPane.showMessageDialog(this, "Passwords do not match.");
+            return;
+        }
+
+        boolean success = employeeService.getEmployeeDao()
+                .setPasswordResetState(current.getEmpNo(), newPass, false, false);
+
+        if (success) {
+            current.setPassword(newPass);
+            current.setMustChangePassword(false);
+            current.setTemporaryPasswordActive(false);
+
+            JOptionPane.showMessageDialog(this, "Password updated successfully.");
+            navigateToDashboard(current);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update password.");
+            }
+        }
 }

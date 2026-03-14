@@ -22,6 +22,7 @@ public abstract class Employee implements IAuthenticatable, IPayrollCalculations
     protected String status;
     protected String position;
     protected String supervisor;
+    
 
     
     
@@ -33,7 +34,16 @@ public abstract class Employee implements IAuthenticatable, IPayrollCalculations
     protected double hourlyRate;
     private double grossSemiMonthlyRate;
     private String photoPath;
-    private String gender; 
+    private String gender;
+    
+    private boolean mustChangePassword;
+    private boolean temporaryPasswordActive;
+
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
+
+    public boolean isTemporaryPasswordActive() { return temporaryPasswordActive; }
+    public void setTemporaryPasswordActive(boolean temporaryPasswordActive) { this.temporaryPasswordActive = temporaryPasswordActive; }
 
     private Role role;
     protected List<LeaveRequest> leaveRequests = new ArrayList<>();
@@ -214,7 +224,10 @@ public void setAccountStatus(String accountStatus) {
     public abstract double calculateSahod();
 
     @Override public boolean isPasswordValid(String pass) { return this.password != null && this.password.equals(pass); }
-    @Override public void resetPassword() { this.status = "PASSWORD_RESET_REQUIRED"; }
+    @Override public void resetPassword() {
+        this.mustChangePassword = true;
+        this.temporaryPasswordActive = true;
+        }
     @Override public void applyLeave(LeaveRequest request) { if (request != null) this.leaveRequests.add(request); }
     @Override public List<LeaveRequest> viewAllLeaveRequests() { return this.leaveRequests; }
     public abstract LeaveRequest applyLeave(String type, LocalDate start, LocalDate end);
