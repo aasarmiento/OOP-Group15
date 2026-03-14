@@ -7,7 +7,5 @@ public interface ITTicketDao {
     List<ITTicket> getAllTickets();
     boolean saveTicket(ITTicket ticket);
     void updateAllTickets(List<ITTicket> tickets);
-
-
-    public boolean addTicket(ITTicket ticket);
+    boolean addTicket(ITTicket ticket);
 }

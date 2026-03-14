@@ -52,40 +52,56 @@ public class ITSupportPanel extends JPanel {
     }
 
     private JPanel createMainContentArea() {
-        JPanel centerWrapper = new JPanel(new BorderLayout(25, 0));
-        centerWrapper.setOpaque(false);
+        JPanel mainContent = new JPanel(new GridBagLayout());
+        mainContent.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
 
-        centerWrapper.add(createTicketForm(), BorderLayout.WEST);
-
-        JPanel rightPanel = new JPanel(new BorderLayout(0, 20));
-        rightPanel.setOpaque(false);
-        
+        // 1. TICKET HISTORY (TAKES FULL TOP WIDTH AND HEIGHT)
         JPanel tableCard = createStyledTile("Your Ticket History");
         tableCard.setLayout(new BorderLayout());
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(Color.WHITE);
-        tableCard.add(scroll, BorderLayout.CENTER);
-        
-        rightPanel.add(tableCard, BorderLayout.CENTER);
-        rightPanel.add(createDetailsPanel(), BorderLayout.SOUTH);
+        JScrollPane tableScroll = new JScrollPane(table);
+        tableScroll.setBorder(BorderFactory.createEmptyBorder());
+        tableScroll.getViewport().setBackground(Color.WHITE);
+        tableScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        tableCard.add(tableScroll, BorderLayout.CENTER);
 
-        centerWrapper.add(rightPanel, BorderLayout.CENTER);
-        return centerWrapper;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridwidth = 2; // Span across both bottom columns
+        gbc.weightx = 1.0; gbc.weighty = 0.7; // Takes 70% of vertical space
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(0, 0, 15, 0);
+        mainContent.add(tableCard, gbc);
+
+        // 2. BOTTOM LEFT: SUBMIT FORM
+        JPanel formCard = createTicketForm();
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.35; gbc.weighty = 0.3; // Takes 30% of vertical space
+        gbc.insets = new Insets(0, 0, 0, 10);
+        mainContent.add(formCard, gbc);
+
+        // 3. BOTTOM RIGHT: TICKET DETAILS
+        JPanel detailsCard = createDetailsPanel();
+        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.weightx = 0.65;
+        gbc.insets = new Insets(0, 10, 0, 0);
+        mainContent.add(detailsCard, gbc);
+
+        return mainContent;
     }
 
     private JPanel createTicketForm() {
         JPanel formCard = createStyledTile("Submit New Ticket");
-        formCard.setPreferredSize(new Dimension(300, 0));
         formCard.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 10, 8, 10); gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 10, 5, 10); 
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
         cbIssueType = new JComboBox<>(new String[]{"Forgot Password", "Account Locked", "Technical Support", "UI Error"});
         cbIssueType.setFont(bodyFont);
         
-        txtDescription = new JTextArea(6, 20);
+        txtDescription = new JTextArea(3, 20); // Smaller row count for bottom placement
         txtDescription.setFont(bodyFont);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);
@@ -94,34 +110,34 @@ public class ITSupportPanel extends JPanel {
             BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
         JButton btnSubmit = new StyledButton("SUBMIT TICKET", primaryMaroon);
+        btnSubmit.setPreferredSize(new Dimension(0, 35));
 
-        int row = 0;
-        gbc.gridy = row++; formCard.add(new JLabel("Issue Category"), gbc);
-        gbc.gridy = row++; formCard.add(cbIssueType, gbc);
-        gbc.gridy = row++; formCard.add(new JLabel("Detailed Description"), gbc);
-        gbc.gridy = row++; formCard.add(new JScrollPane(txtDescription), gbc);
-        gbc.gridy = row++; gbc.insets = new Insets(25, 10, 10, 10);
+        gbc.gridy = 0; formCard.add(new JLabel("Issue Category"), gbc);
+        gbc.gridy = 1; formCard.add(cbIssueType, gbc);
+        gbc.gridy = 2; formCard.add(new JLabel("Detailed Description"), gbc);
+        gbc.gridy = 3; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
+        formCard.add(new JScrollPane(txtDescription), gbc);
+        gbc.gridy = 4; gbc.weighty = 0; gbc.fill = GridBagConstraints.HORIZONTAL;
         formCard.add(btnSubmit, gbc);
 
         btnSubmit.addActionListener(e -> handleSubmit());
-
         return formCard;
     }
 
     private JPanel createDetailsPanel() {
         JPanel detailsCard = createStyledTile("Ticket Information");
-        detailsCard.setPreferredSize(new Dimension(0, 200));
         detailsCard.setLayout(new BorderLayout(15, 10));
 
-        JPanel infoGrid = new JPanel(new GridLayout(1, 3, 10, 0));
-        infoGrid.setOpaque(false);
-        lblDetailID = new JLabel("Ticket: --");
+        JPanel infoHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
+        infoHeader.setOpaque(false);
+        
+        lblDetailID = new JLabel("ID: --");
         lblDetailStatus = new JLabel("Status: --");
         lblDetailDate = new JLabel("Created: --");
         
         for(JLabel lbl : new JLabel[]{lblDetailID, lblDetailStatus, lblDetailDate}) {
             lbl.setFont(cardTitleFont);
-            infoGrid.add(lbl);
+            infoHeader.add(lbl);
         }
         
         txtDetailView = new JTextArea("Select a record to view details...");
@@ -131,15 +147,15 @@ public class ITSupportPanel extends JPanel {
         txtDetailView.setBackground(new Color(242, 242, 242));
         txtDetailView.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        detailsCard.add(infoGrid, BorderLayout.NORTH);
+        detailsCard.add(infoHeader, BorderLayout.NORTH);
         detailsCard.add(new JScrollPane(txtDetailView), BorderLayout.CENTER);
 
         table.getSelectionModel().addListSelectionListener(e -> {
             int r = table.getSelectedRow();
             if (!e.getValueIsAdjusting() && r != -1) {
-                lblDetailID.setText("ID: " + table.getValueAt(r, 0));
-                lblDetailStatus.setText("Status: " + table.getValueAt(r, 4));
-                lblDetailDate.setText("Created: " + table.getValueAt(r, 5));
+                lblDetailID.setText("ID: " + table.getValueAt(r, 0).toString());
+                lblDetailStatus.setText("Status: " + table.getValueAt(r, 4).toString());
+                lblDetailDate.setText("Created: " + table.getValueAt(r, 5).toString());
                 txtDetailView.setText("DESCRIPTION:\n" + table.getValueAt(r, 7).toString());
             }
         });
@@ -151,16 +167,11 @@ public class ITSupportPanel extends JPanel {
         JPanel header = new JPanel(new GridLayout(1, 3, 20, 0));
         header.setOpaque(false);
         header.setPreferredSize(new Dimension(0, 80));
-        
-        lblActiveTicketsCount = new JLabel("0", SwingConstants.CENTER); // Will be updated in KPICard
-        
-        header.add(createKPICard("Your Tickets", "0", primaryMaroon)); // Updated via refreshUI
+        header.add(createKPICard("Your Tickets", "0", primaryMaroon)); 
         header.add(createKPICard("Logged User", currentUser.getFirstName(), Color.DARK_GRAY));
         header.add(createKPICard("Support Module", "IT Helpdesk", new Color(45, 45, 45)));
-        
         return header;
     }
-
 
     private JPanel createKPICard(String title, String value, Color themeColor) {
         JPanel card = createStyledTile("");
@@ -168,9 +179,7 @@ public class ITSupportPanel extends JPanel {
         JLabel lblT = new JLabel(title); lblT.setFont(cardTitleFont); lblT.setForeground(Color.GRAY);
         JLabel lblV = new JLabel(value); lblV.setFont(new Font("DM Sans Bold", Font.BOLD, 22)); lblV.setForeground(themeColor);
         card.add(lblT); card.add(lblV);
-        
         if(title.equals("Your Tickets")) lblActiveTicketsCount = lblV;
-        
         return card;
     }
 
@@ -207,6 +216,17 @@ public class ITSupportPanel extends JPanel {
         table.setSelectionForeground(Color.WHITE); 
         table.setShowVerticalLines(false);
         table.setGridColor(new Color(235, 235, 235));
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        
+        table.getColumnModel().getColumn(0).setPreferredWidth(120); // ID
+        table.getColumnModel().getColumn(1).setPreferredWidth(80);  // Emp No
+        table.getColumnModel().getColumn(2).setPreferredWidth(100); // Username
+        table.getColumnModel().getColumn(3).setPreferredWidth(150); // Type
+        table.getColumnModel().getColumn(4).setPreferredWidth(100); // Status
+        table.getColumnModel().getColumn(5).setPreferredWidth(150); // Created
+        table.getColumnModel().getColumn(6).setPreferredWidth(120); // Resolved By
+        table.getColumnModel().getColumn(7).setPreferredWidth(400); // Description
+        
         setupStatusRenderer();
     }
 
@@ -216,7 +236,6 @@ public class ITSupportPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable t, Object v, boolean isS, boolean hasF, int r, int c) {
                 JLabel l = (JLabel) super.getTableCellRendererComponent(t, v, isS, hasF, r, c);
                 l.setHorizontalAlignment(SwingConstants.CENTER);
-                
                 if (!isS) {
                     if (v != null) {
                         l.setForeground("OPEN".equalsIgnoreCase(v.toString()) ? Color.BLUE : new Color(0, 128, 0));
@@ -224,15 +243,11 @@ public class ITSupportPanel extends JPanel {
                 } else {
                     l.setForeground(Color.WHITE);
                 }
-                
-                if (v != null) {
-                    l.setFont(new Font("DM Sans Bold", Font.BOLD, 12));
-                }
+                l.setFont(new Font("DM Sans Bold", Font.BOLD, 12));
                 return l;
             }
         });
     }
-
 
     public void refreshUI() {
         model.setRowCount(0);
@@ -244,12 +259,8 @@ public class ITSupportPanel extends JPanel {
                 t.getResolvedBy(), t.getDescription()
             });
         }
-        updateKPIHeader(myTickets.size());
-    }
-
-    private void updateKPIHeader(int count) {
         if (lblActiveTicketsCount != null) {
-            lblActiveTicketsCount.setText(String.valueOf(count));
+            lblActiveTicketsCount.setText(String.valueOf(myTickets.size()));
         }
     }
 
@@ -268,12 +279,9 @@ public class ITSupportPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Ticket Submitted!");
             txtDescription.setText("");
             refreshUI(); 
-        } else {
-            JOptionPane.showMessageDialog(this, "Error: Could not save ticket.");
         }
     }
 
-    // Inner Button Class
     class StyledButton extends JButton {
         private Color bgColor;
         public StyledButton(String text, Color bg) {

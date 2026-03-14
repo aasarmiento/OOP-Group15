@@ -7,7 +7,7 @@ public class ITTicket {
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private int ticketId;
+    private String ticketId;
     private int employeeNo;
     private String username;
     private String fullName;
@@ -18,8 +18,7 @@ public class ITTicket {
     private String resolvedAt;
     private String resolvedBy;
 
-    // Constructor for NEW tickets
-    public ITTicket(int ticketId, int employeeNo, String username, String fullName,
+    public ITTicket(String ticketId, int employeeNo, String username, String fullName,
                     String issueType, String description) {
         this.ticketId = ticketId;
         this.employeeNo = employeeNo;
@@ -33,8 +32,7 @@ public class ITTicket {
         this.resolvedBy = "";
     }
 
-    // Constructor for LOADING from CSV
-    public ITTicket(int ticketId, int employeeNo, String username, String fullName,
+    public ITTicket(String ticketId, int employeeNo, String username, String fullName,
                     String issueType, String description, String status,
                     String createdAt, String resolvedAt, String resolvedBy) {
         this.ticketId = ticketId;
@@ -50,26 +48,24 @@ public class ITTicket {
     }
 
     public void markResolved(String resolverName) {
-    this.status = "RESOLVED";
-    this.resolvedBy = resolverName;
-    this.resolvedAt = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-}
+        this.status = "RESOLVED";
+        this.resolvedBy = resolverName;
+        this.resolvedAt = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+    }
 
-    // Inside ITTicket.java
-public void setStatus(String status) {
-    this.status = status;
-}
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-public void setResolvedBy(String resolvedBy) {
-    this.resolvedBy = resolvedBy;
-}
+    public void setResolvedBy(String resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
 
-public void setResolvedAt(String resolvedAt) {
-    this.resolvedAt = resolvedAt;
-}
+    public void setResolvedAt(String resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
 
-    // Getters and Setters
-    public int getTicketId() { return ticketId; }
+    public String getTicketId() { return ticketId; }
     public int getEmployeeNo() { return employeeNo; }
     public String getUsername() { return username; }
     public String getFullName() { return fullName; }
@@ -80,8 +76,7 @@ public void setResolvedAt(String resolvedAt) {
     public String getResolvedAt() { return resolvedAt; }
     public String getResolvedBy() { return resolvedBy; }
 
-
-public void setTicketId(int ticketId) { this.ticketId = ticketId; }
+    public void setTicketId(String ticketId) { this.ticketId = ticketId; }
     public void setEmployeeNo(int employeeNo) { this.employeeNo = employeeNo; }
     public void setUsername(String username) { this.username = username; }
     public void setFullName(String fullName) { this.fullName = fullName; }
@@ -89,10 +84,10 @@ public void setTicketId(int ticketId) { this.ticketId = ticketId; }
     public void setDescription(String description) { this.description = description; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
    
-public String toCSV() {
-    return String.format("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
-        ticketId, employeeNo, username, fullName, 
-        issueType, description, status, createdAt, 
-        resolvedAt, resolvedBy);
-}
+    public String toCSV() {
+        return String.format("%s,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+            ticketId, employeeNo, username, fullName, 
+            issueType, description, status, createdAt, 
+            resolvedAt, resolvedBy);
+    } 
 }

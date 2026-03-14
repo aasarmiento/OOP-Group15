@@ -304,6 +304,41 @@ public class EmployeeManagementService {
         }
     }
 
+    /**
+     * BUSINESS RULE: Calculates total hours worked for the CURRENT MONTH only.
+     * Target for KPI: 160 hours per month.
+     */
+    public double getTotalHoursForCurrentMonth(int empNo) {
+        // UI asks for a number; Service calls DAO for raw data
+        Object[][] logs = attendanceDao.getAttendanceByMonth(
+            empNo, 
+            String.valueOf(java.time.LocalDate.now().getMonthValue()), 
+            String.valueOf(java.time.LocalDate.now().getYear())
+        );
+        
+        double totalHours = 0;
+        java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+
+        for (Object[] row : logs) {
+            try {
+                // row[1] is Time In, row[2] is Time Out
+                String timeInStr = row[1].toString();
+                String timeOutStr = row[2].toString();
+
+                if (!timeInStr.equals("N/A") && !timeOutStr.equals("N/A")) {
+                    java.time.LocalTime in = java.time.LocalTime.parse(timeInStr.trim(), timeFormatter);
+                    java.time.LocalTime out = java.time.LocalTime.parse(timeOutStr.trim(), timeFormatter);
+                    
+                    java.time.Duration duration = java.time.Duration.between(in, out);
+                    totalHours += duration.toMinutes() / 60.0;
+                }
+            } catch (Exception e) {
+                // Silently skip corrupted rows to keep KPI stable
+            }
+        }
+        return totalHours;
+    }
+
 
 
 

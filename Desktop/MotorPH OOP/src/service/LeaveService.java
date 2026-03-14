@@ -122,7 +122,11 @@ public void submitLeave(int empNo, String type, LocalDate start, LocalDate end, 
     return employeeDao.update(emp);
 }
 
-
+public int getTotalRemainingBalance(int empNo) {
+    // Usually, "Total Balance" refers to Vacation + Sick
+    return getRemainingBalance(empNo, "Vacation Leave") + 
+           getRemainingBalance(empNo, "Sick Leave");
+}
 
 public int getRemainingBalance(int empNo, String leaveType) {
    int totalAllowed = switch (leaveType) {

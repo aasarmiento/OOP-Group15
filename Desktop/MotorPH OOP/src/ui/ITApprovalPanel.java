@@ -7,9 +7,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import model.Employee;
+import model.ITStaff; // For Abstraction check
 import model.ITTicket;
 import service.ITSupportService;
 
+/**
+ * UI LAYER: Handles display and user input.
+ * No file loading or core business logic here.
+ */
 public class ITApprovalPanel extends JPanel {
     private final ITSupportService itService;
     private final Employee currentUser;
@@ -17,6 +22,7 @@ public class ITApprovalPanel extends JPanel {
     private DefaultTableModel model;
     private JButton btnResolve;
 
+    // UI Styling Constants
     private final Color primaryMaroon = new Color(128, 0, 0);
     private final Color bgColor = new Color(245, 245, 245);
     private final Color tileBg = new Color(248, 248, 248);
@@ -32,6 +38,7 @@ public class ITApprovalPanel extends JPanel {
         setBackground(bgColor);
         setBorder(new EmptyBorder(30, 40, 30, 40));
 
+        // UI Access Rule: Only IT Staff and Admins can see this panel
         String role = currentUser.getRole().name();
         if (!role.equalsIgnoreCase("IT_STAFF") && !role.equalsIgnoreCase("ADMIN")) {
             showAccessDenied();
@@ -76,6 +83,74 @@ public class ITApprovalPanel extends JPanel {
         add(mainCard, BorderLayout.CENTER);
         refreshUI();
     }
+
+    /**
+     * UI Logic: Refreshes table data by calling Service.
+     * Implements Abstraction: Disables button if currentUser is not ITStaff.
+     */
+    public void refreshUI() {
+        if (model == null) return;
+        model.setRowCount(0);
+        
+        // UI calling Service Layer
+        List<ITTicket> tickets = itService.getAllTickets(); 
+        for (ITTicket t : tickets) {
+            model.addRow(new Object[]{
+                t.getTicketId(),
+                t.getEmployeeNo(),
+                t.getFullName(),
+                t.getIssueType(),
+                t.getStatus(),
+                t.getCreatedAt()
+            });
+        }
+        
+        // BUSINESS RULE (Partial Abstraction): 
+        // Admin can view, but ONLY an ITStaff instance can click Resolve.
+        if (!(currentUser instanceof ITStaff)) {
+            btnResolve.setEnabled(false);
+            btnResolve.setToolTipText("Access Restricted: Only IT Staff can resolve tickets.");
+        }
+    }
+
+    /**
+     * UI Action: Handles the button click and sends request to Service.
+     */
+    private void handleResolve() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Select a ticket to resolve.");
+            return;
+        }
+        
+        String ticketId = table.getValueAt(row, 0).toString();
+        String status = table.getValueAt(row, 4).toString();
+
+        if (status.equalsIgnoreCase("RESOLVED")) {
+            JOptionPane.showMessageDialog(this, "This ticket is already resolved.");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Are you sure you want to resolve Ticket #" + ticketId + "?", 
+            "Confirm Resolution", JOptionPane.YES_NO_OPTION);
+            
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                // UI calling Service Layer (Protection Layer)
+                itService.resolveTicket(ticketId, currentUser); 
+                JOptionPane.showMessageDialog(this, "Ticket " + ticketId + " has been marked as Resolved.");
+                refreshUI();
+            } catch (SecurityException ex) {
+                // Service Layer blocked the action based on business rules
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Access Denied", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // --- UI STYLING METHODS (NO LOGIC) ---
 
     private void showAccessDenied() {
         JPanel deniedPanel = new JPanel(new GridBagLayout());
@@ -173,38 +248,6 @@ public class ITApprovalPanel extends JPanel {
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
             super.paintComponent(g);
             g2.dispose();
-        }
-    }
-
-    public void refreshUI() {
-        if (model == null) return;
-        model.setRowCount(0);
-        List<ITTicket> tickets = itService.getAllTickets(); 
-        for (ITTicket t : tickets) {
-            model.addRow(new Object[]{
-                t.getTicketId(),
-                t.getEmployeeNo(),
-                t.getFullName(),
-                t.getIssueType(),
-                t.getStatus(),
-                t.getCreatedAt()
-            });
-        }
-    }
-
-    private void handleResolve() {
-        int row = table.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Select a ticket to resolve.");
-            return;
-        }
-        int ticketId = (int) table.getValueAt(row, 0);
-        try {
-            itService.resolveTicket(ticketId, currentUser); 
-            JOptionPane.showMessageDialog(this, "Ticket #" + ticketId + " Resolved.");
-            refreshUI();
-        } catch (SecurityException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Security Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

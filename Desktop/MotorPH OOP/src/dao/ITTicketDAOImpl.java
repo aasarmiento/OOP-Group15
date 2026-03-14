@@ -7,51 +7,54 @@ import model.ITTicket;
 
 public class ITTicketDAOImpl implements ITTicketDao {
     private static final String FILE_PATH = "resources/MotorPH_ITTickets.csv";
+    private static final String HEADER = "ID,EmpNo,User,Name,Type,Desc,Status,Created,ResolvedAt,ResolvedBy";
 
-@Override
-public List<ITTicket> getAllTickets() {
-    List<ITTicket> tickets = new ArrayList<>();
-    File file = new File(FILE_PATH);
-    if (!file.exists()) return tickets;
+    @Override
+    public List<ITTicket> getAllTickets() {
+        List<ITTicket> tickets = new ArrayList<>();
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return tickets;
 
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        String line;
-        boolean skipHeader = true;
-
-        while ((line = br.readLine()) != null) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
-
-            if (line.startsWith("timestamp,event") || line.contains("Ticket #")) {
-                break; 
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            br.readLine(); // Skip the header line
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                tickets.add(mapLineToTicket(line));
             }
-
-            if (skipHeader) {
-                skipHeader = false;
-                continue;
-            }
-
-            tickets.add(mapLineToTicket(line));
+        } catch (IOException e) {
+            System.err.println("Read Error: " + e.getMessage());
         }
-    } catch (IOException e) {
-        System.err.println("Read Error: " + e.getMessage());
+        return tickets;
     }
-    return tickets;
-}
 
-  @Override
-public boolean saveTicket(ITTicket ticket) {
-    try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("resources/MotorPH_ITTickets.csv", true)))) {
-        out.println(ticket.toCSV()); 
-        return true;
-    } catch (IOException e) {
-        return false;
+    @Override
+    public boolean saveTicket(ITTicket ticket) {
+        return addTicket(ticket);
     }
-}
+
+    @Override
+    public boolean addTicket(ITTicket ticket) {
+        File file = new File(FILE_PATH);
+        boolean isNew = !file.exists() || file.length() == 0;
+
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(FILE_PATH, true)))) {
+            if (isNew) {
+                out.println(HEADER);
+            }
+            out.println(mapTicketToLine(ticket));
+            return true;
+        } catch (IOException e) {
+            System.err.println("Write Error: " + e.getMessage());
+            return false;
+        }
+    }
 
     @Override
     public void updateAllTickets(List<ITTicket> tickets) {
-        try (PrintWriter out = new PrintWriter(new FileWriter(FILE_PATH))) {
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(FILE_PATH, false)))) {
+            out.println(HEADER);
             for (ITTicket t : tickets) {
                 out.println(mapTicketToLine(t));
             }
@@ -61,10 +64,18 @@ public boolean saveTicket(ITTicket ticket) {
     }
 
     private String mapTicketToLine(ITTicket t) {
-        return String.format("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
-            t.getTicketId(), t.getEmployeeNo(), t.getUsername(), t.getFullName(),
-            t.getIssueType(), t.getDescription(), t.getStatus(), t.getCreatedAt(),
-            t.getResolvedAt(), t.getResolvedBy());
+        return String.format("%s,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+            t.getTicketId(), 
+            t.getEmployeeNo(), 
+            t.getUsername(), 
+            t.getFullName(),
+            t.getIssueType(), 
+            t.getDescription().replace("\"", "'"), 
+            t.getStatus(), 
+            t.getCreatedAt(), 
+            t.getResolvedAt(), 
+            t.getResolvedBy()
+        );
     }
 
     private ITTicket mapLineToTicket(String line) {
@@ -73,38 +84,9 @@ public boolean saveTicket(ITTicket ticket) {
             p[i] = p[i].replace("\"", "").trim();
         }
         return new ITTicket(
-            Integer.parseInt(p[0]), Integer.parseInt(p[1]), p[2], p[3], 
-            p[4], p[5], p[6], p[7], p[8], p[9]
+            p[0], 
+            Integer.parseInt(p[1]), 
+            p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]
         );
     }
-
-@Override
-public boolean addTicket(ITTicket ticket) {
-    String csvLine = String.format("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
-        ticket.getTicketId(),
-        ticket.getEmployeeNo(),
-        ticket.getUsername(),
-        ticket.getFullName(),
-        ticket.getIssueType(),
-        ticket.getDescription(),
-        ticket.getStatus(),
-        ticket.getCreatedAt(),
-        ticket.getResolvedAt(),
-        ticket.getResolvedBy()
-    );
-
-    try {
-        java.nio.file.Files.write(
-            java.nio.file.Paths.get(FILE_PATH), 
-            csvLine.getBytes(), 
-            java.nio.file.StandardOpenOption.APPEND
-        );
-        return true;
-    } catch (IOException e) {
-        System.err.println("Error appending ticket: " + e.getMessage());
-        return false;
-    }
-}
-
-
 }

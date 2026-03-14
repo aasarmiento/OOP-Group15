@@ -185,17 +185,61 @@ public class LeaveRequestPanel extends JPanel {
     }
 
 private JPanel createTopKPIDashboard() {
-        JPanel header = new JPanel(new GridLayout(1, 2, 20, 0));
-        header.setOpaque(false);
-        header.setPreferredSize(new Dimension(0, 90)); 
-        
-        Color kpiPink = new Color(255, 173, 173); 
+    JPanel header = new JPanel(new GridLayout(1, 2, 20, 0));
+    header.setOpaque(false);
+    header.setPreferredSize(new Dimension(0, 90)); 
+    
+    Color kpiPink = new Color(255, 173, 173); 
 
-        header.add(createPinkKPICard("Available Leave Balance", "15 Days", kpiPink));
-        header.add(createPinkKPICard("Upcoming Approved Leave", "Jan 01, 2026", kpiPink));
+    // DYNAMIC DATA FETCHING
+    int vLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Vacation Leave");
+    int sLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Sick Leave");
+    int totalBalance = vLeft + sLeft;
+    
+    String upcomingDate = getUpcomingApprovedLeaveDate();
+
+    // UPDATE: Now uses the actual database values
+    header.add(createPinkKPICard("Available Leave Balance", totalBalance + " Days", kpiPink));
+    header.add(createPinkKPICard("Upcoming Approved Leave", upcomingDate, kpiPink));
+    
+    return header;
+}
+
+private String getUpcomingApprovedLeaveDate() {
+    String closestDate = "None Scheduled";
+    LocalDate today = LocalDate.now();
+    LocalDate nearest = null;
+
+    // Get history from service
+    Object[][] history = leaveService.getLeaveHistory(currentUser.getEmpNo());
+    
+    for (Object[] row : history) {
+        String status = row[8].toString();
+        String startDateStr = row[5].toString();
         
-        return header;
+        if (status.equalsIgnoreCase("APPROVED")) {
+            try {
+                LocalDate leaveStart = LocalDate.parse(startDateStr, formatter);
+                // If the leave is today or in the future
+                if (!leaveStart.isBefore(today)) {
+                    if (nearest == null || leaveStart.isBefore(nearest)) {
+                        nearest = leaveStart;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore parsing errors
+            }
+        }
     }
+
+    if (nearest != null) {
+        closestDate = nearest.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"));
+    }
+    
+    return closestDate;
+}
+
+
 
     private JPanel createPinkKPICard(String title, String value, Color bgColor) {
         JPanel card = new JPanel() {
@@ -345,9 +389,26 @@ private JPanel createTopKPIDashboard() {
         } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Print Error: " + ex.getMessage()); }
     }
 
-    public void refreshUI() {
-        if (leaveService == null || currentUser == null) return;
-        model.setDataVector(leaveService.getLeaveHistory(currentUser.getEmpNo()), cols);
-        setupStatusRenderer();
+   public void refreshUI() {
+    if (leaveService == null || currentUser == null) return;
+    
+    // 1. Keep your original logic (Updates the Table)
+    model.setDataVector(leaveService.getLeaveHistory(currentUser.getEmpNo()), cols);
+    setupStatusRenderer();
+    
+    // 2. Add the KPI update logic (This solves your 9/30 problem)
+    // We remove the old header and put a fresh one in
+    for (Component comp : getComponents()) {
+        if (comp instanceof JPanel && ((JPanel) comp).getLayout() instanceof GridLayout) {
+            remove(comp); // Find the old KPI header and remove it
+            break;
+        }
     }
+    
+    add(createTopKPIDashboard(), BorderLayout.NORTH); // Add the updated KPI header
+    
+    // 3. Tell Swing to redraw the screen with the new numbers
+    revalidate();
+    repaint();
+}
 }

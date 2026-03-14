@@ -65,19 +65,21 @@ public ITStaff(int empNo, String lastName, String firstName, LocalDate birthday,
 
     // --- ISystemOperations Implementation ---
    
-    @Override
-    public boolean resetCredentials(String empID, String adminToken) {
-        if ("MASTER_TOKEN_2026".equals(adminToken)) {
-            System.out.println("IT Security: Resetting credentials for " + empID);
-            return true;
-        }
-        return false;
+    public boolean canApproveTechnicalTickets() {
+        return true; 
     }
 
     @Override
     public String checkSystemHealth() {
-        return "System Status: Online - All Services Operational";
+        return "System Status: Online";
     }
+
+    @Override
+    public boolean resetCredentials(String empID, String adminToken) {
+        return "MASTER_TOKEN_2026".equals(adminToken);
+    }
+
+   
 
     // --- IPayrollCalculations Implementation ---
 
