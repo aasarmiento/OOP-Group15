@@ -1,0 +1,75 @@
+Employee #,Username,First Name,Last Name,Password,Role
+10001,MGarcia,Manuel III,Garcia,1234,ADMIN
+10002,ALim,Antonio,Lim,1234,ADMIN
+10003,BAquino,Bianca Sofia,Aquino,1234,ADMIN
+10004,IReyes,Isabella,Reyes,1234,ADMIN
+10005,EHernandez,Eduard,Hernandez,1234,IT_STAFF
+10006,AVillanueva,Andrea Mae,Villanueva,1234,HR_STAFF
+10007,BSanjose,Brad,San Jose,1234,HR_STAFF
+10008,ARomualdez,Alice,Romualdez,1234,HR_STAFF
+10009,RAtienza,Rosie,Atienza,1234,HR_STAFF
+10010,RAlvaro,Roderick,Alvaro,1234,ACCOUNTING
+10011,ASalcedo,Anthony,Salcedo,1234,ACCOUNTING
+10012,JLopez,Josie,Lopez,1234,ACCOUNTING
+10013,MFarala,Martha,Farala,1234,ACCOUNTING
+10014,LMartinez,Leila,Martinez,1234,ACCOUNTING
+10015,FRomualdez,Fredrick,Romualdez,1234,ACCOUNTING
+10016,CMata,Christian,Mata,1234,REGULAR_STAFF
+10017,SDeleon,Selena,De Leon,1234,REGULAR_STAFF
+10018,ASanjose,Allison,San Jose,1234,REGULAR_STAFF
+10019,CRosario,Cydney,Rosario,1234,REGULAR_STAFF
+10020,MBautista,Mark,Bautista,1234,REGULAR_STAFF
+10021,DLazaro,Darlene,Lazaro,1234,REGULAR_STAFF
+10022,KDelossantos,Kolby,Delos Santos,1234,REGULAR_STAFF
+10023,VSantos,Vella,Santos,1234,REGULAR_STAFF
+10024,TDelrosario,Tomas,Del Rosario,1234,REGULAR_STAFF
+10025,JTolentino,Jacklyn,Tolentino,1234,REGULAR_STAFF
+10026,PGutierrez,Percival,Gutierrez,1234,REGULAR_STAFF
+10027,GManalaysay,Garfield,Manalaysay,1234,REGULAR_STAFF
+10028,LVillegas,Lizeth,Villegas,1234,REGULAR_STAFF
+10029,CRamos,Carol,Ramos,1234,REGULAR_STAFF
+10030,EMaceda,Emelia,Maceda,1234,REGULAR_STAFF
+10031,DAguilar,Delia,Aguilar,1234,REGULAR_STAFF
+10032,JCastro,John Rafael,Castro,1234,REGULAR_STAFF
+10033,CMartinez,Carlos Ian,Martinez,1234,REGULAR_STAFF
+10034,BSantos,Beatriz,Santos,1234,REGULAR_STAFF
+10035,AAsdasdadsads,asdads,asdasdadsads,1234,REGULAR_STAFF
+10036,AAsdasd,Abigai,asdasd,1234,REGULAR_STAFF
+10037,ADelacruz,asdasd,Delacruz,1234,REGULAR_STAFF
+10038,DAsdadsadsads,ddasddasd,asdadsadsads,1234,REGULAR_STAFF
+10039,JDelacruz,Juan,Delacruz,1234,REGULAR_STAFF
+10041,DDfssdfssdf,dsdfsdf,dfssdfssdf,1234,REGULAR_STAFF
+10042,HSarmiento,Hazel,Sarmiento,1234,REGULAR_STAFF
+10043,JVillaruz,Jamil,Villaruz,1234,REGULAR_STAFF
+10044,JDeleon,jastin,deleon,1234,REGULAR_STAFF
+10045,DAsdasdasd,ddddd,asdasdasd,1234,REGULAR_STAFF
+10046,FDela,fds,de la,1234,REGULAR_STAFF
+10047,DWdaasdasdasd,dsdasdfsdsf,wdaasdasdasd,1234,REGULAR_STAFF
+10048,JDelaalasdasdasd,juan,dela alasdasdasd,1234,REGULAR_STAFF
+10049,APanganiban,angelica,panganiban,1234,REGULAR_STAFF
+10050,BGates,Bill,Gates,1234,REGULAR_STAFF
+10051,ASdaasdsdasadwdsa,adsdsdsa,sdaasdsdasadwdsa,1234,REGULAR_STAFF
+10052,ASadasdasddassda,asdasddsa,sadasdasddassda,1234,REGULAR_STAFF
+10053,FSdfsdfdsfsdf,fsdsdfdsf,sdfsdfdsfsdf,1234,REGULAR_STAFF
+10054,ADfssddfs,asdasdasd,dfssddfs,1234,REGULAR_STAFF
+10055,BAlonzo,Bea,Alonzo,1234,REGULAR_STAFF
+10056,DGoliath,drake,goliath,1234,REGULAR_STAFF
+10059,JIuhiuyyu,jnbjn,iuhiuyyu,1234,REGULAR_STAFF
+10060,DFdgdfgfg,dfgdfgfdg,fdgdfgfg,1234,REGULAR_STAFF
+10061,SSddsfsdf,sdfsdf,sddsfsdf,1234,REGULAR_STAFF
+10062,ADsasdasdasdsdads,adsas,dsasdasdasdsdads,1234,REGULAR_STAFF
+10065,DRsersdfdsfdsf,dfdssdf,rsersdfdsfdsf,1234,REGULAR_STAFF
+10067,AAsdasassda,asdsadsda,asdasassda,1234,REGULAR_STAFF
+10068,ASarmiento,abi,sarmiento,1234,REGULAR_STAFF
+10069,GGran,Graer,Gran,1234,REGULAR_STAFF
+10070,GLdfsdfsfd,Gres,Ldfsdfsfd,1234,REGULAR_STAFF
+10072,JVilla,Jerc,Villa,1234,HR_STAFF
+10073,AAsdasdasd,asdasd,asdasdasd,1234,ADMIN
+10074,SSdfsdfsdfsdf,sdfsdfsdf,sdfsdfsdfsdf,1234,ADMIN
+10075,AAsdadsadsads,asdasdasd,asdadsadsads,1234,ADMIN
+10076,ASarmiento,Abigail Ann,Sarmiento,1234,ACCOUNTING
+10077,AFesdfsdf,asdds,fesdfsdf,1234,HR_STAFF
+10078,JMananzala,John,Mananzala,1234,IT_STAFF
+10078,null,John,Mananzala,null,HR_STAFF
+10078,null,John,Mananzala,null,HR_STAFF
+10078,null,John,Mananzala,null,HR_STAFF

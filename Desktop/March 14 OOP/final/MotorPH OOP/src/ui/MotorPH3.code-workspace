@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../Desktop/GuiPractice"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}
