@@ -43,6 +43,11 @@ public class ITSupportPanel extends JPanel {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         table = new JTable(model);
+        
+        // --- ADDED SINGLE SELECTION MODE ---
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // ------------------------------------
+        
         styleTable();
         
         add(createTopKPIDashboard(), BorderLayout.NORTH);

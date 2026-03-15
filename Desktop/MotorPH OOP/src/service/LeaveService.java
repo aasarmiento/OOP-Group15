@@ -2,7 +2,7 @@ package service;
 
 import dao.AttendanceDAO;
 import dao.EmployeeDAO;
-import dao.LeaveLibrary; // Import your Leave DAO
+import dao.LeaveLibrary; 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -123,7 +123,6 @@ public void submitLeave(int empNo, String type, LocalDate start, LocalDate end, 
 }
 
 public int getTotalRemainingBalance(int empNo) {
-    // Usually, "Total Balance" refers to Vacation + Sick
     return getRemainingBalance(empNo, "Vacation Leave") + 
            getRemainingBalance(empNo, "Sick Leave");
 }

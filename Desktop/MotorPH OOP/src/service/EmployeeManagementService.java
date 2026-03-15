@@ -15,7 +15,7 @@ import model.Employee;
 import model.IAdminOperations;
 import model.PeriodSummary;
 import model.RegularStaff;
-
+import model.Role;
 
 public class EmployeeManagementService {
     private final EmployeeDAO employeeDao;
@@ -26,13 +26,10 @@ public class EmployeeManagementService {
         this.attendanceDao = attendanceDao;
     }
 
-
-    
     public List<Employee> getAll() { 
         return employeeDao.getAll();
     }
 
-    
     public String[] getFormattedDataForForm(Object[] raw) {
         String[] uiData = new String[21];
         if (raw == null) return uiData;
@@ -41,9 +38,7 @@ public class EmployeeManagementService {
             uiData[0] = String.valueOf(raw[0]);  // ID
             uiData[1] = String.valueOf(raw[1]);  // Last Name
             uiData[2] = String.valueOf(raw[2]);  // First Name
-            
             uiData[3] = (raw.length > 20 && raw[20] != null) ? String.valueOf(raw[20]) : "N/A"; 
-            
             uiData[4] = String.valueOf(raw[3]);  // Birthday
             uiData[5] = String.valueOf(raw[4]);  // Address
             uiData[6] = String.valueOf(raw[5]);  // Phone
@@ -68,15 +63,13 @@ public class EmployeeManagementService {
         return uiData;
     }
 
-   public List<Employee> getAllEmployees() {
-    List<Employee> all = new java.util.ArrayList<>(employeeDao.getAll());
-    
-    all.removeIf(e -> e.getEmpNo() == 0 || 
-                      e.getLastName().equalsIgnoreCase("asdasdads") || 
-                      e.getFirstName().equalsIgnoreCase("asdasd"));
-    
-    return all;
-}
+    public List<Employee> getAllEmployees() {
+        List<Employee> all = new java.util.ArrayList<>(employeeDao.getAll());
+        all.removeIf(e -> e.getEmpNo() == 0 || 
+                          e.getLastName().equalsIgnoreCase("asdasdads") || 
+                          e.getFirstName().equalsIgnoreCase("asdasd"));
+        return all;
+    }
 
     public Object[] getEmployeeDetailsForForm(int empId) {
         Employee emp = employeeDao.findById(empId);
@@ -93,7 +86,6 @@ public class EmployeeManagementService {
         };
     }
 
-
     public boolean processNewHire(Employee actor, String fName, String lName, String sss, double salary) {
         if (!(actor instanceof IAdminOperations)) {
             showError("Access Denied: Only Admins can register employees.");
@@ -107,10 +99,11 @@ public class EmployeeManagementService {
         newEmp.setRiceSubsidy(1500);
         newEmp.setPhoneAllowance(500);
         newEmp.setClothingAllowance(1000);
+        newEmp.setRole(Role.REGULAR_STAFF); 
         return registerEmployee((IAdminOperations)actor, newEmp);
     }
 
-  public boolean registerEmployee(IAdminOperations actor, Employee emp) {
+   public boolean registerEmployee(model.IAdminOperations actor, model.Employee emp) {
         if (actor == null || emp == null) return false;
 
         if (emp.getFirstName().trim().isEmpty() || emp.getLastName().trim().isEmpty()) {
@@ -118,23 +111,34 @@ public class EmployeeManagementService {
             return false;
         }
 
+        Role assignedRole = mapPositionToRole(emp.getPosition());
+        emp.setRole(assignedRole);
+
         int nextId = employeeDao.getNextAvailableId();
-        if (nextId <= 0) {
-            nextId = 10001; 
-        }
+        if (nextId <= 0) nextId = 10001; 
         emp.setEmpNo(nextId);
 
-        
         double hourly = emp.getBasicSalary() / 21 / 8;
         emp.setHourlyRate(hourly);
+        emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
         
-        double totalGross = emp.getBasicSalary() + 
-                            emp.getRiceSubsidy() + 
-                            emp.getPhoneAllowance() + 
-                            emp.getClothingAllowance();
-        emp.setGrossRate(totalGross);
+        boolean empSaved = employeeDao.addEmployee(emp);
 
-        return employeeDao.addEmployee(emp);
+        if (empSaved) {
+            String fName = emp.getFirstName().trim();
+            String lName = emp.getLastName().trim().replaceAll("\\s+", "");
+            String generatedUsername = fName.substring(0, 1).toUpperCase() + 
+                                     lName.substring(0, 1).toUpperCase() + 
+                                     lName.substring(1).toLowerCase();
+            
+            return employeeDao.createLoginCredentials(
+                emp.getEmpNo(), 
+                generatedUsername, 
+                "1234", 
+                assignedRole.name() 
+            );
+        }
+        return false;
     }
 
     public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
@@ -148,7 +152,12 @@ public class EmployeeManagementService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
             LocalDate birthday = bdayText.contains("-") ? LocalDate.parse(bdayText) : LocalDate.parse(bdayText, formatter);
 
-            Employee emp = new RegularStaff();
+            String position = fields[12].getText().trim();
+            Role assignedRole = mapPositionToRole(position);
+
+            // Create correct instance based on Mapped Role
+            Employee emp = createEmployeeInstance(assignedRole.name());
+
             emp.setEmpNo(Integer.parseInt(fields[0].getText().trim()));
             emp.setLastName(fields[1].getText().trim());
             emp.setFirstName(fields[2].getText().trim());
@@ -161,10 +170,10 @@ public class EmployeeManagementService {
             emp.setTin(fields[9].getText().trim());
             emp.setPagibig(fields[10].getText().trim());
             emp.setStatus(fields[11].getText().trim());
-            emp.setPosition(fields[12].getText().trim());
+            emp.setPosition(position);
             emp.setSupervisor(fields[13].getText().trim());
+            emp.setRole(assignedRole);
 
-            
             double basic = parseDouble(fields[14].getText());
             emp.setBasicSalary(basic);
             emp.setRiceSubsidy(parseDouble(fields[15].getText()));
@@ -172,9 +181,7 @@ public class EmployeeManagementService {
             emp.setClothingAllowance(parseDouble(fields[17].getText()));
             
             emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
-            
-            double calculatedHourly = basic / 21 / 8;
-            emp.setHourlyRate(calculatedHourly); 
+            emp.setHourlyRate(basic / 21 / 8); 
 
             return employeeDao.update(emp);
         } catch (Exception e) {
@@ -187,6 +194,7 @@ public class EmployeeManagementService {
         Employee emp = employeeDao.findById(empNo);
         Object[][] logs = attendanceDao.getAttendanceByMonth(empNo, month, year);
         service.PayrollCalculator calc = new service.PayrollCalculator();
+        // Passing 'this' to maintain service context
         PayrollService payrollService = new PayrollService(employeeDao, calc, this);
         DateTimeFormatter csvDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         double totalHours = 0;
@@ -215,7 +223,6 @@ public class EmployeeManagementService {
     public Object[][] getAttendanceLogs(int empNo, String month, String year) {
         return attendanceDao.getAttendanceByMonth(empNo, month, year);
     }
-
 
     public String[] getSupervisorsForPosition(String position) {
         if (position == null) return new String[]{"N/A"};
@@ -247,12 +254,10 @@ public class EmployeeManagementService {
             showError("Access Denied: Administrative privileges required.");
             return false;
         }
-
         if (id == 10001) {
             showError("System Error: This account is protected and cannot be deleted.");
             return false; 
         }
-
         return employeeDao.deleteEmployee(id);
     }
 
@@ -273,117 +278,106 @@ public class EmployeeManagementService {
         return states;
     }
 
-    public EmployeeDAO getEmployeeDao() {
-        return this.employeeDao;
-    }
+    public EmployeeDAO getEmployeeDao() { return this.employeeDao; }
 
-    public int generateNextEmployeeId() {
-        return employeeDao.getNextAvailableId();
-    }
+    public int generateNextEmployeeId() { return employeeDao.getNextAvailableId(); }
 
     public void updateEmployeePhoto(Employee emp, File selectedFile) {
         try {
-            if (!selectedFile.getName().toLowerCase().endsWith(".png") && 
-                !selectedFile.getName().toLowerCase().endsWith(".jpg")) {
+            if (!selectedFile.getName().toLowerCase().matches(".*\\.(png|jpg)$")) {
                 throw new IllegalArgumentException("Only PNG or JPG allowed.");
             }
-
             employeeDao.saveProfilePicture(emp.getEmpNo(), selectedFile);
-
-            String fileName = selectedFile.getName();
-            String extension = fileName.substring(fileName.lastIndexOf("."));
-            String newPath = emp.getEmpNo() + extension;
-            emp.setPhotoPath(newPath);
-
+            String extension = selectedFile.getName().substring(selectedFile.getName().lastIndexOf("."));
+            emp.setPhotoPath(emp.getEmpNo() + extension);
             employeeDao.update(emp);
-            
-        } catch (IOException e) {
-            showError("Failed to save image: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException e) {
             showError(e.getMessage());
         }
     }
 
-    /**
-     * BUSINESS RULE: Calculates total hours worked for the CURRENT MONTH only.
-     * Target for KPI: 160 hours per month.
-     */
     public double getTotalHoursForCurrentMonth(int empNo) {
-        // UI asks for a number; Service calls DAO for raw data
         Object[][] logs = attendanceDao.getAttendanceByMonth(
             empNo, 
             String.valueOf(java.time.LocalDate.now().getMonthValue()), 
             String.valueOf(java.time.LocalDate.now().getYear())
         );
-        
         double totalHours = 0;
         java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
-
         for (Object[] row : logs) {
             try {
-                // row[1] is Time In, row[2] is Time Out
                 String timeInStr = row[1].toString();
                 String timeOutStr = row[2].toString();
-
                 if (!timeInStr.equals("N/A") && !timeOutStr.equals("N/A")) {
                     java.time.LocalTime in = java.time.LocalTime.parse(timeInStr.trim(), timeFormatter);
                     java.time.LocalTime out = java.time.LocalTime.parse(timeOutStr.trim(), timeFormatter);
-                    
                     java.time.Duration duration = java.time.Duration.between(in, out);
                     totalHours += duration.toMinutes() / 60.0;
                 }
-            } catch (Exception e) {
-                // Silently skip corrupted rows to keep KPI stable
-            }
+            } catch (Exception e) {}
         }
         return totalHours;
     }
 
-
-
-
-
-   
     public double[] getStandardAllowances(String position) {
         if (position == null) return new double[]{1500, 500, 500};
-
         switch (position) {
             case "Chief Operating Officer":
             case "Chief Finance Officer":
             case "Chief Marketing Officer":
             case "Chief Executive Officer":
                 return new double[]{1500, 2000, 1000};
-
             case "IT Operations and Systems":
             case "HR Manager":
             case "Payroll Manager":
             case "Accounting Head":
             case "Account Manager":
                 return new double[]{1500, 1000, 1000};
-
             case "HR Team Leader":
             case "Payroll Team Leader":
             case "Account Team Leader":
                 return new double[]{1500, 800, 800};
-
             default:
                 return new double[]{1500, 500, 500};
         }
     }
 
-   public ImageIcon getEmployeePhoto(int empId, int width, int height) {
+    public ImageIcon getEmployeePhoto(int empId, int width, int height) {
         File photoFile = employeeDao.getEmployeePhotoFile(empId);
-        
         if (photoFile != null && photoFile.exists()) {
             ImageIcon icon = new ImageIcon(photoFile.getAbsolutePath());
-            
             Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            
             return new ImageIcon(img);
         }
-        
         return null; 
     }
 
-   
+    public double getBasicSalaryForPosition(String position) {
+        switch (position) {
+            case "Chief Executive Officer": return 100000.00;
+            case "Chief Operating Officer": return 90000.00;
+            case "Chief Finance Officer": return 80000.00;
+            case "Chief Marketing Officer": return 80000.00;
+            case "IT Operations and Systems": return 70000.00;
+            case "HR Manager": return 60000.00;
+            case "Accounting Head": return 60000.00;
+            case "Payroll Manager": return 60000.00;
+            default: return 50000.00;
+        }
+    }
+
+    public Role mapPositionToRole(String position) {
+        return Role.fromString(position);
+    }
+
+    public Employee createEmployeeInstance(String roleName) {
+        Role role = Role.fromString(roleName);
+        switch (role) {
+            case ADMIN: return new model.Admin();
+            case HR_STAFF: return new model.HRStaff();
+            case IT_STAFF: return new model.ITStaff();
+            case ACCOUNTING: return new model.AccountingStaff();
+            default: return new model.RegularStaff();
+        }
+    }
 }

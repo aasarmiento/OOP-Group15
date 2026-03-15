@@ -7,10 +7,7 @@ import model.Employee;
 import model.HRStaff;
 import model.LeaveRequest;
 
-/**
- * SERVICE LAYER: Handles Business Rules, Calculation, and Validation.
- * This layer protects the DAO (LeaveLibrary) from unauthorized or invalid calls.
- */
+
 public class HRSerbisyo {
     private final EmployeeDAO employeeDao;
     private final LeaveLibrary leaveLibrary; 

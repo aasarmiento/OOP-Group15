@@ -9,10 +9,11 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import model.Attendance;
 import model.Employee;
-import model.PeriodSummary;
+import model.PayrollBreakdown; 
+import service.DolePolicy;
 import service.EmployeeManagementService;
 import service.PayrollCalculator;
-import service.PayrollService;
+import service.PayrollService; 
 
 public class MyPayslip extends JPanel {
     private final EmployeeManagementService service;
@@ -35,6 +36,7 @@ public class MyPayslip extends JPanel {
     private JLabel lblEmployeeId, lblEmployeeName, lblPosition, lblStatus, lblDaysPresent;
     private JLabel lblBasic, lblAllowances, lblLateMinutes, lblLateDeduction, lblTaxableIncome;
     private JPanel paper; 
+
     public MyPayslip(EmployeeManagementService service, PayrollCalculator calc, PayrollService payrollService, Employee user) {
         this.service = service;
         this.calc = calc;
@@ -45,7 +47,6 @@ public class MyPayslip extends JPanel {
         setBackground(BG_LIGHT);
 
         add(createPayslipHeader(), BorderLayout.NORTH);
-
         paper = createPayslipContent();
         
         JPanel centeringWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20));
@@ -84,13 +85,9 @@ public class MyPayslip extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (getModel().isPressed()) {
-                    g2.setColor(MOTORPH_MAROON.darker());
-                } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(150, 0, 0)); 
-                } else {
-                    g2.setColor(MOTORPH_MAROON);
-                }
+                if (getModel().isPressed()) g2.setColor(MOTORPH_MAROON.darker());
+                else if (getModel().isRollover()) g2.setColor(new Color(150, 0, 0)); 
+                else g2.setColor(MOTORPH_MAROON);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
                 g2.dispose();
                 super.paintComponent(g);
@@ -104,7 +101,6 @@ public class MyPayslip extends JPanel {
         btnCalculate.setBorderPainted(false);
         btnCalculate.setFocusPainted(false);
         btnCalculate.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
         btnCalculate.addActionListener(e -> calculateSalary());
 
         JButton btnPrint = new JButton("Print PDF");
@@ -146,7 +142,6 @@ public class MyPayslip extends JPanel {
         paperPanel.setOpaque(false);
         paperPanel.setBorder(new EmptyBorder(0, 0, 40, 0)); 
 
-        // --- Header Section with Logo & Dirt White Background ---
         JPanel headerBrand = new JPanel();
         headerBrand.setLayout(new BoxLayout(headerBrand, BoxLayout.Y_AXIS));
         headerBrand.setOpaque(true); 
@@ -161,29 +156,19 @@ public class MyPayslip extends JPanel {
             JLabel logoLabel = new JLabel(new ImageIcon(img));
             logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             headerBrand.add(logoLabel);
-            headerBrand.add(Box.createVerticalStrut(15));
-        } catch (Exception e) {
-            System.err.println("Logo not found at specified path.");
-        }
+        } catch (Exception e) {}
 
         JLabel title = new JLabel("PAYSLIP OVERVIEW");
         title.setFont(new Font("DM Sans Bold", Font.BOLD, 22));
         title.setForeground(MOTORPH_MAROON);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         headerBrand.add(title);
-        
         paperPanel.add(headerBrand); 
 
         JPanel bodyPadding = new JPanel();
         bodyPadding.setLayout(new BoxLayout(bodyPadding, BoxLayout.Y_AXIS));
         bodyPadding.setOpaque(false);
         bodyPadding.setBorder(new EmptyBorder(25, 50, 20, 50)); 
-        bodyPadding.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JSeparator sep = new JSeparator();
-        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        bodyPadding.add(sep);
-        bodyPadding.add(Box.createVerticalStrut(25));
 
         addSectionHeader(bodyPadding, "EMPLOYEE INFORMATION");
         lblEmployeeId = createLabeledRow(bodyPadding, "Employee #:");
@@ -221,17 +206,14 @@ public class MyPayslip extends JPanel {
 
         JLabel netLabel = new JLabel("TOTAL NET PAY");
         netLabel.setFont(sectionFont);
-        
         lblNetPay = new JLabel("PHP 0.00");
         lblNetPay.setFont(new Font("DM Sans Bold", Font.BOLD, 24));
         lblNetPay.setForeground(MOTORPH_MAROON);
-        
         netPayPanel.add(netLabel, BorderLayout.WEST);
         netPayPanel.add(lblNetPay, BorderLayout.EAST);
         
         bodyPadding.add(netPayPanel);
         paperPanel.add(bodyPadding);
-
         return paperPanel;
     }
 
@@ -248,28 +230,23 @@ public class MyPayslip extends JPanel {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JLabel label = new JLabel(labelText);
         label.setFont(labelFont);
         label.setForeground(Color.GRAY);
-        
         JLabel value = new JLabel("0.00");
         value.setFont(valueFont);
         value.setForeground(Color.BLACK);
         value.setHorizontalAlignment(SwingConstants.RIGHT);
-
         row.add(label, BorderLayout.WEST);
         row.add(value, BorderLayout.EAST);
         row.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(245, 245, 245)));
-
         parent.add(row);
         parent.add(Box.createVerticalStrut(5));
         return value;
     }
 
     private void printToPDF() {
-        JOptionPane.showMessageDialog(this, "Exporting to PDF... (Functionality to be linked with PDF Library)");
+        JOptionPane.showMessageDialog(this, "Exporting to PDF...");
     }
 
     public final void calculateSalary() {
@@ -278,44 +255,78 @@ public class MyPayslip extends JPanel {
             String year = (String) yearPicker.getSelectedItem();
 
             Object[][] rawLogs = service.getAttendanceLogs(currentUser.getEmpNo(), month, year);
-            double totalHours = 0;
             
-            for (Object[] row : rawLogs) {
-                Attendance record = new Attendance(
-                    currentUser.getEmpNo(),
-                    LocalDate.parse(row[0].toString().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    row[1].equals("N/A") ? null : LocalTime.parse(row[1].toString().trim()),
-                    row[2].equals("N/A") ? null : LocalTime.parse(row[2].toString().trim())
-                );
-                payrollService.processAttendance(record);
-                totalHours += record.getHoursWorked();
+            if (rawLogs == null || rawLogs.length == 0) {
+                clearLabels();
+                return;
             }
 
-            double grossIncome = calc.calculateGrossIncome(currentUser, totalHours);
-            PeriodSummary summary = calc.calculateFullSummary(currentUser, grossIncome);
+            double totalHours = 0;
+            int totalLateMins = 0;
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            
+            for (Object[] row : rawLogs) {
+                try {
+                    Attendance record = new Attendance(
+                        currentUser.getEmpNo(),
+                        LocalDate.parse(row[0].toString().trim(), dtf),
+                        (row[1] == null || row[1].equals("N/A")) ? null : LocalTime.parse(row[1].toString().trim()),
+                        (row[2] == null || row[2].equals("N/A")) ? null : LocalTime.parse(row[2].toString().trim())
+                    );
+                    
+                    payrollService.processAttendance(record);
+                    totalHours += record.getHoursWorked();
+                    totalLateMins += record.getLateMinutes();
+                } catch (Exception e) {
+                    System.err.println("Error parsing row: " + e.getMessage());
+                }
+            }
+
+            double lateAmount = (currentUser.getHourlyRate() / 60.0) * totalLateMins;
+
+            DolePolicy policy = new DolePolicy();
+            PayrollBreakdown breakdown = policy.compute(currentUser, totalHours, lateAmount);
 
             lblEmployeeId.setText(String.valueOf(currentUser.getEmpNo()));
-            lblEmployeeName.setText(currentUser.getFullName());
+            lblEmployeeName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
             lblPosition.setText(currentUser.getPosition()); 
-            lblStatus.setText("Regular");
+            lblStatus.setText(currentUser.getStatus());
+
             lblDaysPresent.setText(String.valueOf(rawLogs.length));
-            lblLateMinutes.setText("0"); 
-            lblLateDeduction.setText("0.00"); 
-            lblBasic.setText(df.format(currentUser.getBasicSalary()));
-            double totalAllowances = currentUser.getRiceSubsidy() + currentUser.getPhoneAllowance() + currentUser.getClothingAllowance();
-            lblAllowances.setText(df.format(totalAllowances));
-            lblGross.setText(df.format(summary.getGrossIncome()));
-            lblSss.setText(df.format(summary.getSss()));
-            lblPhilhealth.setText(df.format(summary.getPhilhealth()));
-            lblPagibig.setText(df.format(summary.getPagibig()));
+            lblLateMinutes.setText(totalLateMins + " mins"); 
+            lblLateDeduction.setText("-" + df.format(lateAmount)); 
+
+            lblBasic.setText(df.format(breakdown.getEarnedBasicPay()));
+            lblAllowances.setText(df.format(breakdown.getTotalAllowances()));
+            lblGross.setText(df.format(breakdown.getGrossPay())); 
+
+            lblSss.setText(df.format(breakdown.getSss()));
+            lblPhilhealth.setText(df.format(breakdown.getPhilhealth()));
+            lblPagibig.setText(df.format(breakdown.getPagibig()));
             
-            double taxInc = summary.getGrossIncome() - (summary.getSss() + summary.getPhilhealth() + summary.getPagibig());
-            lblTaxableIncome.setText(df.format(Math.max(0, taxInc)));
-            lblTax.setText(df.format(summary.getTax()));
-            lblNetPay.setText("PHP " + df.format(summary.getNetPay()));
+            lblTaxableIncome.setText(df.format(breakdown.getTaxableIncome()));
+            lblTax.setText(df.format(breakdown.getWithholdingTax()));
+            
+            lblNetPay.setText("PHP " + df.format(breakdown.getNetPay()));
+
+            this.revalidate();
+            this.repaint();
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error calculating: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error updating payslip: " + ex.getMessage());
+            ex.printStackTrace();
         }
+    }
+    
+    private void clearLabels() {
+        lblDaysPresent.setText("0");
+        lblLateMinutes.setText("0");
+        lblLateDeduction.setText("0.00");
+        lblGross.setText("0.00");
+        lblNetPay.setText("PHP 0.00");
+        lblSss.setText("0.00");
+        lblPhilhealth.setText("0.00");
+        lblPagibig.setText("0.00");
+        lblTax.setText("0.00");
     }
 }

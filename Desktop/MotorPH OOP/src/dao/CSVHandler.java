@@ -114,7 +114,7 @@ public class CSVHandler implements EmployeeDAO {
                             Employee upgraded = upgradeEmployeeRole(baseEmp, roleStr);
                             upgraded.setPassword(loginData[4].trim());
                             employeeCache.put(id, upgraded);
-                            usernameCache.put(loginData[1].trim().toLowerCase(), upgraded);
+                            usernameCache.put(loginData[1].trim(), upgraded);
                         }
                     } catch (Exception e) { }
                 }
@@ -193,7 +193,7 @@ public class CSVHandler implements EmployeeDAO {
     
     @Override public List<Employee> getAll() { return new ArrayList<>(employeeCache.values()); }
     @Override public Employee findById(int id) { return employeeCache.get(id); }
-    @Override public Employee findByUsername(String u) { return usernameCache.get(u.trim().toLowerCase()); }
+    @Override public Employee findByUsername(String u) { return usernameCache.get(u.trim()); }
 
     @Override
     public boolean update(Employee emp) { 
@@ -201,10 +201,48 @@ public class CSVHandler implements EmployeeDAO {
         return saveAllToCSV(); 
     }
 
-    @Override public boolean deleteEmployee(int id) { 
-        employeeCache.remove(id); 
-        return saveAllToCSV(); 
+   @Override 
+public boolean deleteEmployee(int id) { 
+    Employee removed = employeeCache.remove(id); 
+    
+    if (removed != null) {
+        usernameCache.entrySet().removeIf(entry -> entry.getValue().getEmpNo() == id);
     }
+
+    boolean empSaved = saveAllToCSV(); 
+    boolean loginSaved = saveLoginsToCSV(); // eto lang pala un htys
+    
+    return empSaved && loginSaved; 
+}
+
+private boolean saveLoginsToCSV() {
+    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_CSV)))) {
+        writer.println("Employee #,Username,First Name,Last Name,Password,Role");
+        
+        for (Employee e : employeeCache.values()) {
+            String password = (e.getPassword() != null) ? e.getPassword() : "1234";
+            String roleStr = (e.getRole() != null) ? e.getRole().name() : "REGULAR_STAFF";
+            
+            String username = e.getFirstName().substring(0, 1).toUpperCase() + 
+                              e.getLastName().substring(0, 1).toUpperCase() + 
+                              e.getLastName().substring(1).toLowerCase().replaceAll("\\s+", "");
+
+            writer.printf("%d,%s,%s,%s,%s,%s%n",
+                e.getEmpNo(),
+                username,
+                e.getFirstName(),
+                e.getLastName(),
+                password,
+                roleStr
+            );
+        }
+        writer.flush();
+        return true;
+    } catch (IOException e) {
+        System.err.println("Error syncing login CSV: " + e.getMessage());
+        return false;
+    }
+}
 
     private boolean saveAllToCSV() {
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(EMPLOYEE_DATA_CSV)))) {
@@ -331,5 +369,47 @@ public class CSVHandler implements EmployeeDAO {
 
 private String getFileExtension(String fileName) {
     return fileName.substring(fileName.lastIndexOf("."));
+}
+
+public boolean createLoginCredentials(int empId, String username, String password, String accessLevel) {
+    File file = new File(LOGIN_DATA_CSV); 
+    
+    if (file.getParentFile() != null) {
+        file.getParentFile().mkdirs();
+    }
+
+    boolean fileExists = file.exists();
+
+    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
+        
+        if (!fileExists || file.length() == 0) {
+            writer.println("Employee #,Username,First Name,Last Name,Password,Role");
+        }
+
+        Employee emp = employeeCache.get(empId);
+        String firstName = (emp != null) ? emp.getFirstName() : "Unknown";
+        String lastName = (emp != null) ? emp.getLastName() : "Unknown";
+
+        writer.printf("%d,%s,%s,%s,%s,%s%n", 
+            empId, 
+            username, 
+            firstName, 
+            lastName, 
+            password, 
+            accessLevel
+        );
+        
+        writer.flush();
+        
+        if (emp != null) {
+            emp.setPassword(password);
+            usernameCache.put(username.trim(), emp);
+        }
+        
+        return true;
+    } catch (IOException e) {
+        System.err.println("Error saving login credentials: " + e.getMessage());
+        return false;
+    }
 }
 }

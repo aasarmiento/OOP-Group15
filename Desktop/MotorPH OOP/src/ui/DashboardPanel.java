@@ -363,11 +363,11 @@ public class DashboardPanel extends JFrame {
         kpiRow.setOpaque(false);
 
         double totalHours = 0;
-        int availableLeaveValue = 0; // SETTING TO 9 AS REQUESTED
+        int availableLeaveValue = 0; 
         
        try {
     totalHours = employeeService.getTotalHoursForCurrentMonth(currentUser.getEmpNo());
-    // This pulls the REAL remaining balance from your database
+    // This pulls the REAL remaining balance from our database
     int vLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Vacation Leave");
     int sLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Sick Leave");
     availableLeaveValue = vLeft + sLeft;
@@ -417,7 +417,7 @@ public class DashboardPanel extends JFrame {
         txtFirstName = addTransparentField(headerText, "Display Name:");
         txtStatus = addTransparentField(headerText, "Status:"); 
         txtPosition = addTransparentField(headerText, "Current Role:");
-        txtTenured = addTransparentField(headerText, "E-mail address:"); 
+        txtTenured = addTransparentField(headerText, "Gender"); 
         profileHeader.add(headerText, BorderLayout.CENTER);
 
         JPanel gridContainer = new JPanel(new GridLayout(2, 2, 20, 20));
@@ -573,10 +573,10 @@ public class DashboardPanel extends JFrame {
     lblTitle.setFont(cardTitleFont); 
     lblTitle.setForeground(new Color(45, 45, 45)); 
     
-    // MODIFIED LOGIC HERE:
+    
     String displayValue;
     if (title.equalsIgnoreCase("Available Leave")) {
-        displayValue = current + "/" + total; // This makes it show 9/30
+        displayValue = current + "/" + total; 
     } else if (title.equalsIgnoreCase("Attendance")) {
         displayValue = current + "%";
     } else {
@@ -607,7 +607,7 @@ public class DashboardPanel extends JFrame {
             g2.drawOval(x, y, size, size);
             g2.setColor(new Color(128, 0, 0));
             
-            // This ensures the circular ring still fills up correctly (9 out of 30)
+            
             int angle = (int) ((double) current / total * 360);
             g2.drawArc(x, y, size, size, 90, -angle);
             g2.dispose();
@@ -627,7 +627,7 @@ public class DashboardPanel extends JFrame {
 
        public NavButton(String text, String iconPath) {
     super();
-    // FlowLayout(LEFT) matches your Figma sidebar alignment
+   
     setLayout(new FlowLayout(FlowLayout.LEFT, 15, 8));
     setContentAreaFilled(false); 
     setBorderPainted(false); 
@@ -641,9 +641,8 @@ public class DashboardPanel extends JFrame {
             ImageIcon rawIcon = new ImageIcon(iconPath);
             Image img = rawIcon.getImage();
             
-            // LOGIC TO PREVENT STRETCHING:
-            // We calculate the scale while maintaining the aspect ratio
-            int targetSize = 18; // Standard icon size for sidebars
+            
+            int targetSize = 18; 
             int width = img.getWidth(null);
             int height = img.getHeight(null);
             
@@ -659,7 +658,7 @@ public class DashboardPanel extends JFrame {
 
             Image scaledImg = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
             
-            // Create a fixed-size container to keep icons aligned even if they have different widths
+           
             JPanel iconContainer = new JPanel(new GridBagLayout());
             iconContainer.setOpaque(false);
             iconContainer.setPreferredSize(new Dimension(22, 22)); 

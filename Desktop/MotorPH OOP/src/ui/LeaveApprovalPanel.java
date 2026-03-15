@@ -96,6 +96,16 @@ public class LeaveApprovalPanel extends JPanel {
             return;
         }
 
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Are you sure you want to " + status.toLowerCase() + " this leave request?", 
+            "Confirm Action", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+            
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
         String leaveId = table.getValueAt(row, 0).toString();
         boolean success = hrSerbisyo.updateLeaveStatus(currentUser, leaveId, status);
 
@@ -250,6 +260,10 @@ public class LeaveApprovalPanel extends JPanel {
         table.setSelectionBackground(primaryMaroon);
         table.setShowVerticalLines(false);
         table.setGridColor(new Color(235, 235, 235));
+        
+        // --- SINGLE SELECTION LOGIC ADDED HERE ---
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         setupStatusRenderer();
     }
 

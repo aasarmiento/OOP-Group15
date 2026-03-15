@@ -48,4 +48,6 @@ List<Employee> getAllEmployees();
     void saveProfilePicture(int empNo, File sourceFile) throws IOException;
 
      public File getEmployeePhotoFile(int empId);
+
+     public boolean createLoginCredentials(int empId, String username, String password, String role);
 }

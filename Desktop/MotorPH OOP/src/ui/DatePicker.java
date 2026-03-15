@@ -23,7 +23,7 @@ public class DatePicker {
         month = now.get(java.util.Calendar.MONTH);
         year = now.get(java.util.Calendar.YEAR);
 
-        JPanel p1 = new JPanel(new GridLayout(7, 7)); // Adjusted for header + 6 weeks
+        JPanel p1 = new JPanel(new GridLayout(7, 7)); 
         String[] header = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
         for (int x = 0; x < button.length; x++) {

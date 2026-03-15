@@ -40,6 +40,11 @@ public class LeaveRequestPanel extends JPanel {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         table = new JTable(model);
+        
+        // --- ADDED SINGLE SELECTION MODE ---
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // ------------------------------------
+        
         styleTable();
         
         add(createTopKPIDashboard(), BorderLayout.NORTH);
@@ -191,14 +196,12 @@ private JPanel createTopKPIDashboard() {
     
     Color kpiPink = new Color(255, 173, 173); 
 
-    // DYNAMIC DATA FETCHING
     int vLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Vacation Leave");
     int sLeft = leaveService.getRemainingBalance(currentUser.getEmpNo(), "Sick Leave");
     int totalBalance = vLeft + sLeft;
     
     String upcomingDate = getUpcomingApprovedLeaveDate();
 
-    // UPDATE: Now uses the actual database values
     header.add(createPinkKPICard("Available Leave Balance", totalBalance + " Days", kpiPink));
     header.add(createPinkKPICard("Upcoming Approved Leave", upcomingDate, kpiPink));
     
@@ -210,7 +213,6 @@ private String getUpcomingApprovedLeaveDate() {
     LocalDate today = LocalDate.now();
     LocalDate nearest = null;
 
-    // Get history from service
     Object[][] history = leaveService.getLeaveHistory(currentUser.getEmpNo());
     
     for (Object[] row : history) {
@@ -220,15 +222,12 @@ private String getUpcomingApprovedLeaveDate() {
         if (status.equalsIgnoreCase("APPROVED")) {
             try {
                 LocalDate leaveStart = LocalDate.parse(startDateStr, formatter);
-                // If the leave is today or in the future
                 if (!leaveStart.isBefore(today)) {
                     if (nearest == null || leaveStart.isBefore(nearest)) {
                         nearest = leaveStart;
                     }
                 }
-            } catch (Exception e) {
-                // Ignore parsing errors
-            }
+            } catch (Exception e) {}
         }
     }
 
@@ -238,8 +237,6 @@ private String getUpcomingApprovedLeaveDate() {
     
     return closestDate;
 }
-
-
 
     private JPanel createPinkKPICard(String title, String value, Color bgColor) {
         JPanel card = new JPanel() {
@@ -258,18 +255,16 @@ private String getUpcomingApprovedLeaveDate() {
 
         JLabel lblT = new JLabel(title); 
         lblT.setFont(cardTitleFont); 
-        lblT.setForeground(new Color(45, 45, 45)); // Dark Gray
+        lblT.setForeground(new Color(45, 45, 45)); 
         
         JLabel lblV = new JLabel(value); 
         lblV.setFont(new Font("SansSerif", Font.BOLD, 22)); 
-        lblV.setForeground(new Color(60, 0, 0)); // Deep Maroon text
+        lblV.setForeground(new Color(60, 0, 0)); 
         
         card.add(lblT); 
         card.add(lblV);
         return card;
     }
-
-   
 
     private JPanel createStyledTile(String title) {
         JPanel panel = new JPanel() {
@@ -293,14 +288,6 @@ private String getUpcomingApprovedLeaveDate() {
             ));
         }
         return panel;
-    }
-
-    private void addFormField(JPanel p, String label, Component field, GridBagConstraints gbc, int row) {
-        gbc.gridy = row;
-        JLabel l = new JLabel(label); l.setFont(cardTitleFont);
-        p.add(l, gbc);
-        gbc.gridy = ++row;
-        p.add(field, gbc);
     }
 
     private JTextField createStyledTextField() {
@@ -365,14 +352,27 @@ private String getUpcomingApprovedLeaveDate() {
 
     private void handleSubmission(JComboBox combo, JTextField start, JTextField end, JTextArea reason) {
         String type = (String) combo.getSelectedItem();
+        
         if (start.getText().isEmpty() || end.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select dates.");
+            JOptionPane.showMessageDialog(this, "Please select start and end dates.");
             return;
         }
+
+        if (reason.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please provide a reason for your leave request.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            reason.requestFocus();
+            return;
+        }
+
         try {
             leaveService.submitLeave(currentUser.getEmpNo(), type, 
                 LocalDate.parse(start.getText(), formatter), 
-                LocalDate.parse(end.getText(), formatter), reason.getText());
+                LocalDate.parse(end.getText(), formatter), reason.getText().trim());
+            
+            reason.setText(""); 
+            start.setText("");
+            end.setText("");
+            
             refreshUI();
             JOptionPane.showMessageDialog(this, "Leave request submitted successfully!");
         } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage()); }
@@ -392,22 +392,18 @@ private String getUpcomingApprovedLeaveDate() {
    public void refreshUI() {
     if (leaveService == null || currentUser == null) return;
     
-    // 1. Keep your original logic (Updates the Table)
     model.setDataVector(leaveService.getLeaveHistory(currentUser.getEmpNo()), cols);
     setupStatusRenderer();
     
-    // 2. Add the KPI update logic (This solves your 9/30 problem)
-    // We remove the old header and put a fresh one in
     for (Component comp : getComponents()) {
         if (comp instanceof JPanel && ((JPanel) comp).getLayout() instanceof GridLayout) {
-            remove(comp); // Find the old KPI header and remove it
+            remove(comp); 
             break;
         }
     }
     
-    add(createTopKPIDashboard(), BorderLayout.NORTH); // Add the updated KPI header
+    add(createTopKPIDashboard(), BorderLayout.NORTH); 
     
-    // 3. Tell Swing to redraw the screen with the new numbers
     revalidate();
     repaint();
 }

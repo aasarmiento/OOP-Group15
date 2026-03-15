@@ -1,7 +1,5 @@
 package service;
 
-import dao.AttendanceCSVHandler;
-import dao.AttendanceDAO;
 import dao.EmployeeDAO; 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -11,57 +9,88 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Attendance;
 import model.Employee;
-import model.PeriodSummary;     
+import model.PayrollBreakdown;
+
 public class PayrollService {
     private final EmployeeDAO employeeDao;
-    private final PayrollCalculator calculator;
-    private final EmployeeManagementService attendanceService;
-    private final AttendanceDAO attendanceDao; 
+    private final EmployeeManagementService attendanceService; 
+    private final DolePolicy dolePolicy; 
 
     private final LocalTime EXPECTED_IN = LocalTime.of(8, 0);
     private final LocalTime GRACE_PERIOD_CUTOFF = LocalTime.of(8, 10);
 
-   
     public PayrollService(EmployeeDAO dao, PayrollCalculator calc, EmployeeManagementService attService) {
         this.employeeDao = dao;
-        this.calculator = calc;
         this.attendanceService = attService;
-        this.attendanceDao = new AttendanceCSVHandler();
+        this.dolePolicy = new DolePolicy(); 
+    }
+
+    /**
+     * BRIDGE METHOD: Updated to calculate late minutes before computing payroll.
+     */
+    public PayrollBreakdown calculateFullPayroll(int empId, String month, String year) {
+        Employee emp = employeeDao.findById(empId);
+        if (emp == null) return null;
+
+        // We need both hours and late minutes for a correct MotorPH calculation
+        AttendanceSummary summary = getAttendanceSummary(empId, month, year);
+        
+        // Calculate late deduction amount here to pass to DolePolicy
+        double lateDeduction = (emp.getHourlyRate() / 60.0) * summary.totalLateMinutes;
+        
+        return dolePolicy.compute(emp, summary.totalHours, lateDeduction);
+    }
+
+    /**
+     * UPDATED: Now filters out employees with 0 attendance hours.
+     */
+    public List<Object[]> getFullPayrollReport(String month, String year) {
+        List<Object[]> reportData = new ArrayList<>();
+        List<Employee> allEmployees = attendanceService.getAllEmployees();
+
+        for (Employee emp : allEmployees) {
+            // 1. Get the summary for THIS employee for the period
+            AttendanceSummary summary = this.getAttendanceSummary(emp.getEmpNo(), month, year);
+            
+            // FILTER: If the employee has 0 hours, they are not "present" for this month.
+            // This prevents employees like 10035 from appearing in the list if they have no logs.
+            if (summary.totalHours <= 0) {
+                continue; // Skip this employee and move to the next
+            }
+            
+            // 2. Calculate the late deduction amount
+            double lateDeduction = (emp.getHourlyRate() / 60.0) * summary.totalLateMinutes;
+            
+            // 3. Compute via DolePolicy using the 3-argument method
+            // This ensures the Gross and Net in the table are CORRECTLY adjusted
+            PayrollBreakdown breakdown = dolePolicy.compute(emp, summary.totalHours, lateDeduction);
+
+            reportData.add(new Object[]{
+                emp.getEmpNo(),
+                emp.getLastName() + ", " + emp.getFirstName(),
+                emp.getPosition(), 
+                emp.getBasicSalary(),     
+                breakdown.getTotalAllowances(),          
+                breakdown.getGrossPay(), 
+                breakdown.getNetPay(),   
+                "Processed"              
+            });
+        }
+        return reportData;
     }
 
    
-public List<Object[]> getFullPayrollReport(String month, String year) {
-    List<Object[]> reportData = new ArrayList<>();
-    List<Employee> allEmployees = attendanceService.getAllEmployees();
-
-    for (Employee emp : allEmployees) {
-        double totalHours = getTotalHoursForPeriod(emp.getEmpNo(), month, year);
-        double grossIncome = calculator.calculateGrossIncome(emp, totalHours);
-        PeriodSummary summary = calculator.calculateFullSummary(emp, grossIncome);
-        
-        double totalAllowances = emp.getRiceSubsidy() + 
-                                 emp.getPhoneAllowance() + 
-                                 emp.getClothingAllowance();
-
-        reportData.add(new Object[]{
-            emp.getEmpNo(),
-            emp.getLastName() + ", " + emp.getFirstName(),
-            "Employee", 
-            emp.getBasicSalary(),     
-            totalAllowances,          
-            summary.getGrossIncome(),
-            summary.getNetPay(),
-            "Processed"
-        });
-    }
-    return reportData;
-}
-
-    public double getTotalHoursForPeriod(int empNo, String month, String year) {
-        Object[][] logs = attendanceService.getAttendanceLogs(empNo, month, year);
+    private static class AttendanceSummary {
         double totalHours = 0;
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyyy"); 
-        if (logs == null) return 0;
+        int totalLateMinutes = 0;
+    }
+
+    public AttendanceSummary getAttendanceSummary(int empNo, String month, String year) {
+        Object[][] logs = attendanceService.getAttendanceLogs(empNo, month, year);
+        AttendanceSummary summary = new AttendanceSummary();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy"); 
+        
+        if (logs == null) return summary;
 
         for (Object[] row : logs) {
             try {
@@ -69,34 +98,34 @@ public List<Object[]> getFullPayrollReport(String month, String year) {
                 String inStr = row[1].toString().trim();
                 String outStr = row[2].toString().trim();
 
-                LocalTime timeIn = inStr.equals("N/A") ? null : LocalTime.parse(inStr);
-                LocalTime timeOut = outStr.equals("N/A") ? null : LocalTime.parse(outStr);
+                LocalTime timeIn = (inStr.equals("N/A") || inStr.isEmpty()) ? null : LocalTime.parse(inStr);
+                LocalTime timeOut = (outStr.equals("N/A") || outStr.isEmpty()) ? null : LocalTime.parse(outStr);
 
                 Attendance record = new Attendance(empNo, date, timeIn, timeOut);
                 this.processAttendance(record); 
-                totalHours += record.getHoursWorked();
+                
+                summary.totalHours += record.getHoursWorked();
+                summary.totalLateMinutes += record.getLateMinutes();
                 
             } catch (Exception e) {
                 continue; 
             }
         }
-        return totalHours;
+        return summary;
     }
 
-    public double getFinalGross(int empNo, String month, String year) {
-        Employee emp = employeeDao.findById(empNo);
-        if (emp == null) return 0;
-        
-        double totalHours = getTotalHoursForPeriod(empNo, month, year);
-        return calculator.calculateGrossIncome(emp, totalHours);
+    public double getTotalHoursForPeriod(int empNo, String month, String year) {
+        return getAttendanceSummary(empNo, month, year).totalHours;
     }
 
     public void processAttendance(Attendance attendance) {
         if (attendance.getTimeIn() == null || attendance.getTimeOut() == null) {
             attendance.setHoursWorked(0);
+            attendance.setLateMinutes(0);
             return;
         }
 
+        // MotorPH Requirement: If after 8:10, calculate late from 8:00
         if (attendance.getTimeIn().isAfter(GRACE_PERIOD_CUTOFF)) {
             attendance.setLate(true); 
             long lateMins = Duration.between(EXPECTED_IN, attendance.getTimeIn()).toMinutes();
@@ -107,34 +136,8 @@ public List<Object[]> getFullPayrollReport(String month, String year) {
         }
 
         long totalMinutes = Duration.between(attendance.getTimeIn(), attendance.getTimeOut()).toMinutes();
-        double hours = (totalMinutes - 60) / 60.0;
+        // Standard 1-hour lunch break deduction
+        double hours = (totalMinutes - 60) / 60.0; 
         attendance.setHoursWorked(Math.max(0, hours));
-    }
-
-public List<Object[]> getHistoricalSummary(String month, String year) {
-    List<Object[]> history = new java.util.ArrayList<>();
-    
-    List<Object[]> realData = getFullPayrollReport(month, year); 
-    
-    for (Object[] row : realData) {
-        history.add(new Object[]{
-            month + " " + year, 
-            row[0],             
-            row[1],            
-            row[6],             
-            row[7]             
-        });
-    }
-    return history;
-}
-
-    private boolean isPeriodClosed(String month, String year) {
-        try {
-            int m = Integer.parseInt(month);
-            int y = Integer.parseInt(year);
-            return y < 2026 || (y == 2026 && m < 3);
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 }
