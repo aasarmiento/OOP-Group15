@@ -20,14 +20,13 @@ public class EmployeeDetailForm extends JFrame {
     private JComboBox<String> comboPosition;
     private JComboBox<String> comboSupervisor;
     private JComboBox<String> comboStatus; 
-    private JComboBox<String> comboRole; // NEW FIELD
+    private JComboBox<String> comboRole; 
     
     private JButton btnEdit, btnSave;
     private final EmployeeManagementService service;
     private final Employee currentUser; 
     private JLabel lblProfilePic;
     
-    // To track what exactly changed
     private String[] originalValues;
 
     private final Color primaryMaroon = new Color(128, 0, 0);
@@ -40,7 +39,7 @@ public class EmployeeDetailForm extends JFrame {
         "Employee #", "Last Name", "First Name", "Gender", "Birthday", "Address", "Phone #",
         "SSS #", "Philhealth #", "TIN #", "Pag-ibig #", "Status", "Position",
         "Immediate Supervisor", "Basic Salary", "Rice Subsidy", "Phone Allowance",
-        "Clothing Allowance", "Gross Semi-monthly Rate", "Hourly Rate", "Access Role" // Updated Label
+        "Clothing Allowance", "Gross Semi-monthly Rate", "Hourly Rate", "Access Role" 
     };
 
     public EmployeeDetailForm(Object[] rawRowData, EmployeeManagementService service, Employee employeeViewed) {  
@@ -48,7 +47,7 @@ public class EmployeeDetailForm extends JFrame {
         this.currentUser = employeeViewed;
 
         setTitle("MotorPH - Employee Full Details");
-        setSize(550, 900); // Increased height for extra field
+        setSize(550, 900); 
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         
@@ -104,7 +103,6 @@ public class EmployeeDetailForm extends JFrame {
         
         String[] statusOptions = {"Probationary", "Regular"};
         
-        // Populate Role Labels from Enum
         String[] roleLabels = {
             Role.ADMIN.getLabel(), 
             Role.HR_STAFF.getLabel(), 
@@ -150,8 +148,14 @@ public class EmployeeDetailForm extends JFrame {
                 updateSupervisorList(value);
                 mainPanel.add(comboSupervisor, gbc);
             }
-            else if (i == 20) { // Role Index
-                comboRole.setSelectedItem(value);
+            else if (i == 20) { 
+                // FIX: Map internal Enum name (IT_STAFF) to UI label (IT Staff)
+                try {
+                    Role r = Role.valueOf(value);
+                    comboRole.setSelectedItem(r.getLabel());
+                } catch (Exception e) {
+                    comboRole.setSelectedItem(value);
+                }
                 mainPanel.add(comboRole, gbc);
             }
             else {
@@ -269,12 +273,11 @@ public class EmployeeDetailForm extends JFrame {
         btnSave = new StyledButton("Save Changes", primaryMaroon);
         btnSave.setVisible(false);
         btnEdit.addActionListener(e -> { 
-            // Save state of editable fields before editing
             originalValues[1] = fields[1].getText();
             originalValues[5] = fields[5].getText();
             originalValues[6] = fields[6].getText();
             originalValues[14] = fields[14].getText();
-            originalValues[20] = (String) comboRole.getSelectedItem(); // Store original role
+            originalValues[20] = (String) comboRole.getSelectedItem(); 
             
             setFieldsEditable(true); 
             btnEdit.setVisible(false); 
@@ -302,7 +305,11 @@ public class EmployeeDetailForm extends JFrame {
         if (!fields[5].getText().equals(originalValues[5])) changedDetails.add("Address");
         if (!fields[6].getText().equals(originalValues[6])) changedDetails.add("Phone #");
         if (!fields[14].getText().equals(originalValues[14])) changedDetails.add("Basic Salary");
-        if (!comboRole.getSelectedItem().equals(originalValues[20])) changedDetails.add("Access Role");
+        
+        String selectedRoleLabel = (String) comboRole.getSelectedItem();
+        if (originalValues[20] == null || !selectedRoleLabel.equals(originalValues[20])) {
+            changedDetails.add("Access Role");
+        }
 
         if (changedDetails.isEmpty()) {
             setFieldsEditable(false); btnSave.setVisible(false); btnEdit.setVisible(true);
@@ -315,15 +322,27 @@ public class EmployeeDetailForm extends JFrame {
             "Confirm Changes", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
+            // Update fields array from ComboBoxes before passing to service
             fields[11] = new JTextField((String) comboStatus.getSelectedItem());
             fields[12] = new JTextField((String) comboPosition.getSelectedItem());
             fields[13] = new JTextField((String) comboSupervisor.getSelectedItem());
-            fields[20] = new JTextField((String) comboRole.getSelectedItem()); // Pass Role to fields array
+            
+            // Convert selected label ("IT Staff") back to Enum name ("IT_STAFF")
+            Role roleEnum = Role.fromLabel(selectedRoleLabel);
+            fields[20] = new JTextField(roleEnum.name()); 
             
             if (service.updateEmployeeFromForm(currentUser, fields)) {
                 JOptionPane.showMessageDialog(this, "Changes Saved Successfully");
                 setFieldsEditable(false); btnSave.setVisible(false); btnEdit.setVisible(true);
-            } else JOptionPane.showMessageDialog(this, "Update Failed.", "Error", JOptionPane.ERROR_MESSAGE);
+                
+                originalValues[1] = fields[1].getText();
+                originalValues[5] = fields[5].getText();
+                originalValues[6] = fields[6].getText();
+                originalValues[14] = fields[14].getText();
+                originalValues[20] = selectedRoleLabel;
+            } else {
+                JOptionPane.showMessageDialog(this, "Update Failed.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -331,13 +350,13 @@ public class EmployeeDetailForm extends JFrame {
         comboPosition.setEnabled(active);
         comboSupervisor.setEnabled(active);
         comboStatus.setEnabled(active);
-        comboRole.setEnabled(active); // Enable Role Combo
+        comboRole.setEnabled(active); 
         for (int i = 0; i < fields.length; i++) {
             if (fields[i] == null) continue;
             boolean isEditable = (i == 1 || i == 5 || i == 6 || i == 14);
             if (isEditable) {
                 fields[i].setEditable(active);
-                fields[i].setBackground(Color.WHITE);
+                fields[i].setBackground(active ? Color.WHITE : new Color(240, 240, 240));
                 fields[i].setBorder(active ? BorderFactory.createLineBorder(primaryMaroon) : BorderFactory.createLineBorder(new Color(220, 220, 220)));
             }
         }

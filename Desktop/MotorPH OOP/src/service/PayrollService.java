@@ -26,7 +26,7 @@ public class PayrollService {
     }
 
     /**
-     * BRIDGE METHOD: Updated to calculate late minutes before computing payroll.
+     * ito ung nagbribridge na kaninng lapses natin: Updated to calculate late minutes before computing payroll.
      */
     public PayrollBreakdown calculateFullPayroll(int empId, String month, String year) {
         Employee emp = employeeDao.findById(empId);
@@ -41,28 +41,21 @@ public class PayrollService {
         return dolePolicy.compute(emp, summary.totalHours, lateDeduction);
     }
 
-    /**
-     * UPDATED: Now filters out employees with 0 attendance hours.
-     */
+   
     public List<Object[]> getFullPayrollReport(String month, String year) {
         List<Object[]> reportData = new ArrayList<>();
         List<Employee> allEmployees = attendanceService.getAllEmployees();
 
         for (Employee emp : allEmployees) {
-            // 1. Get the summary for THIS employee for the period
             AttendanceSummary summary = this.getAttendanceSummary(emp.getEmpNo(), month, year);
             
-            // FILTER: If the employee has 0 hours, they are not "present" for this month.
-            // This prevents employees like 10035 from appearing in the list if they have no logs.
+            
             if (summary.totalHours <= 0) {
-                continue; // Skip this employee and move to the next
+                continue; 
             }
             
-            // 2. Calculate the late deduction amount
             double lateDeduction = (emp.getHourlyRate() / 60.0) * summary.totalLateMinutes;
             
-            // 3. Compute via DolePolicy using the 3-argument method
-            // This ensures the Gross and Net in the table are CORRECTLY adjusted
             PayrollBreakdown breakdown = dolePolicy.compute(emp, summary.totalHours, lateDeduction);
 
             reportData.add(new Object[]{
@@ -136,8 +129,15 @@ public class PayrollService {
         }
 
         long totalMinutes = Duration.between(attendance.getTimeIn(), attendance.getTimeOut()).toMinutes();
-        // Standard 1-hour lunch break deduction
         double hours = (totalMinutes - 60) / 60.0; 
         attendance.setHoursWorked(Math.max(0, hours));
     }
+
+    public List<Object[]> getHistoricalSummary(String month, String year) {
+    List<Object[]> summary = new java.util.ArrayList<>();
+    
+
+    
+    return summary;
+}
 }

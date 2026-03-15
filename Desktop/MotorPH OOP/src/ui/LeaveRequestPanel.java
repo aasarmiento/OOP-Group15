@@ -10,17 +10,19 @@ import javax.swing.table.DefaultTableModel;
 import model.Employee;
 import service.LeaveService;
 
-public class LeaveRequestPanel extends JPanel {
+
+public class LeaveRequestPanel extends BasePanel {
     private final LeaveService leaveService;
     private final Employee currentUser;
     private DefaultTableModel model;
     private JTable table;
+    private JPanel kpiContainer; 
     
-    private final Color primaryMaroon = new Color(128, 0, 0);
-    private final Color bgColor = new Color(245, 245, 245);
-    private final Color tileBg = new Color(248, 248, 248);
-    private final Font bodyFont = new Font("SansSerif", Font.PLAIN, 13);
-    private final Font cardTitleFont = new Font("SansSerif", Font.BOLD, 12);
+    private final Color primaryMaroon = UIUtils.MOTORPH_MAROON;
+    private final Color bgColor = UIUtils.BG_LIGHT;
+    private final Color tileBg = Color.WHITE;
+    private final Font bodyFont = UIUtils.FONT_BODY;
+    private final Font cardTitleFont = UIUtils.FONT_LABEL;
 
     private JTextArea txtDetailReason;
     private JLabel lblDetailID, lblDetailType, lblDetailStatus;
@@ -29,27 +31,33 @@ public class LeaveRequestPanel extends JPanel {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
     public LeaveRequestPanel(LeaveService leaveService, Employee user) {
+        super(); // Initializes BasePanel setup (Background and BorderLayout)
         this.leaveService = leaveService;
         this.currentUser = user;
         
-        setLayout(new BorderLayout(20, 20));
-        setBackground(bgColor);
         setBorder(new EmptyBorder(20, 40, 20, 40));
         
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         table = new JTable(model);
-        
-        // --- ADDED SINGLE SELECTION MODE ---
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        // ------------------------------------
         
         styleTable();
         
-        add(createTopKPIDashboard(), BorderLayout.NORTH);
+        kpiContainer = new JPanel(new BorderLayout());
+        kpiContainer.setOpaque(false);
+        kpiContainer.add(createTopKPIDashboard());
+        
+        add(kpiContainer, BorderLayout.NORTH);
         add(createMainContentArea(), BorderLayout.CENTER);
         
+        refreshData();
+    }
+
+    
+    @Override
+    public void refreshData() {
         refreshUI();
     }
 
@@ -101,9 +109,11 @@ public class LeaveRequestPanel extends JPanel {
     JScrollPane reasonScroll = new JScrollPane(txtReason);
     reasonScroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
-    JButton btnPickStart = new StyledButton("📅 Select Start", Color.DARK_GRAY);
-    JButton btnPickEnd = new StyledButton("📅 Select End", Color.DARK_GRAY);
-    JButton btnSubmit = new StyledButton("Submit Request", primaryMaroon);
+    JButton btnPickStart = UIUtils.createPrimaryButton("📅 Select Start");
+    btnPickStart.setBackground(Color.DARK_GRAY);
+    JButton btnPickEnd = UIUtils.createPrimaryButton("📅 Select End");
+    btnPickEnd.setBackground(Color.DARK_GRAY);
+    JButton btnSubmit = UIUtils.createPrimaryButton("Submit Request");
 
     gbc.gridy = row++;
     formCard.add(new JLabel("Type:"), gbc);
@@ -169,7 +179,8 @@ public class LeaveRequestPanel extends JPanel {
         txtDetailReason.setBackground(new Color(240, 240, 240));
         txtDetailReason.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JButton btnPrint = new StyledButton("Print Leave Form (PDF)", new Color(45, 45, 45));
+        JButton btnPrint = UIUtils.createPrimaryButton("Print Leave Form (PDF)");
+        btnPrint.setBackground(new Color(45, 45, 45));
         btnPrint.addActionListener(e -> handlePrint());
 
         detailsCard.add(infoHeader, BorderLayout.NORTH);
@@ -319,35 +330,12 @@ private String getUpcomingApprovedLeaveDate() {
                 JLabel comp = (JLabel) super.getTableCellRendererComponent(t, v, isS, hasF, r, c);
                 comp.setHorizontalAlignment(SwingConstants.CENTER);
                 String s = (v != null) ? v.toString() : "";
-                if(s.equalsIgnoreCase("APPROVED")) comp.setForeground(new Color(0, 128, 0));
+                if(s.equalsIgnoreCase("APPROVED")) comp.setForeground(UIUtils.SUCCESS_GREEN);
                 else if(s.equalsIgnoreCase("PENDING")) comp.setForeground(primaryMaroon);
                 else comp.setForeground(Color.GRAY);
                 return comp;
             }
         });
-    }
-
-    class StyledButton extends JButton {
-        private Color bgColor;
-        public StyledButton(String text, Color bg) {
-            super(text);
-            this.bgColor = bg;
-            setContentAreaFilled(false);
-            setBorderPainted(false);
-            setFocusPainted(false);
-            setForeground(Color.WHITE);
-            setFont(cardTitleFont);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-        }
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(getModel().isPressed() ? bgColor.darker() : bgColor);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-            super.paintComponent(g);
-            g2.dispose();
-        }
     }
 
     private void handleSubmission(JComboBox combo, JTextField start, JTextField end, JTextArea reason) {
@@ -389,22 +377,16 @@ private String getUpcomingApprovedLeaveDate() {
         } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Print Error: " + ex.getMessage()); }
     }
 
-   public void refreshUI() {
-    if (leaveService == null || currentUser == null) return;
-    
-    model.setDataVector(leaveService.getLeaveHistory(currentUser.getEmpNo()), cols);
-    setupStatusRenderer();
-    
-    for (Component comp : getComponents()) {
-        if (comp instanceof JPanel && ((JPanel) comp).getLayout() instanceof GridLayout) {
-            remove(comp); 
-            break;
-        }
+    public void refreshUI() {
+        if (leaveService == null || currentUser == null) return;
+        
+        model.setDataVector(leaveService.getLeaveHistory(currentUser.getEmpNo()), cols);
+        setupStatusRenderer();
+        
+        kpiContainer.removeAll();
+        kpiContainer.add(createTopKPIDashboard());
+        
+        revalidate();
+        repaint();
     }
-    
-    add(createTopKPIDashboard(), BorderLayout.NORTH); 
-    
-    revalidate();
-    repaint();
-}
 }

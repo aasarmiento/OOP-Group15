@@ -11,6 +11,16 @@ public enum Role {
     Role(String label) { this.label = label; }
     public String getLabel() { return label; }
 
+    
+    public static Role fromLabel(String labelText) {
+        for (Role r : Role.values()) {
+            if (r.label.equalsIgnoreCase(labelText)) {
+                return r;
+            }
+        }
+        return REGULAR_STAFF; 
+    }
+
     public static Role fromString(String text) {
         if (text == null || text.isEmpty()) return REGULAR_STAFF;
         

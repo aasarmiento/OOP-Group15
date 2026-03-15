@@ -13,7 +13,8 @@ import service.EmployeeManagementService;
 import service.PayrollCalculator;
 import service.PayrollService;
 
-public class PayrollFinances extends JPanel {
+// Updated to extend BasePanel and properly implement OOP principles
+public class PayrollFinances extends BasePanel {
     private final EmployeeManagementService empService;
     private final PayrollService payrollService;
     private final PayrollCalculator calc;
@@ -25,17 +26,15 @@ public class PayrollFinances extends JPanel {
     
     private JLabel lblTotalSalary, lblTotalAllowances, lblTotalGross, lblTotalNet;
     
-    // Chart References
     private BarChartPanel overviewChart;
     private DoughnutChartPanel breakdownChart;
 
     public PayrollFinances(EmployeeManagementService empService, PayrollService payrollService, PayrollCalculator calc, Employee user) {
+        super(); // Initializes BasePanel background, layout, and padding
         this.empService = empService;
         this.payrollService = payrollService;
         this.calc = calc;
         
-        setLayout(new BorderLayout(20, 20));
-        setBackground(new Color(245, 245, 245));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JPanel topPanel = new JPanel(new BorderLayout(0, 10));
@@ -47,12 +46,11 @@ public class PayrollFinances extends JPanel {
         JPanel centerPanel = new JPanel(new BorderLayout(20, 20));
         centerPanel.setOpaque(false);
 
-        // Updated Chart Panel with actual drawing classes
         JPanel chartPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         chartPanel.setOpaque(false);
         
-        overviewChart = new BarChartPanel("Payroll Overview");
-        breakdownChart = new DoughnutChartPanel("Payroll Breakdown");
+        overviewChart = new BarChartPanel("Payroll Overview", motorPHRed);
+        breakdownChart = new DoughnutChartPanel("Payroll Breakdown", motorPHRed);
         
         chartPanel.add(overviewChart);
         chartPanel.add(breakdownChart);
@@ -83,10 +81,10 @@ public class PayrollFinances extends JPanel {
         });
 
         JButton btnGenerate = new JButton("Generate Payroll");
-        btnGenerate.setBackground(new Color(128, 0, 0));
+        btnGenerate.setPreferredSize(new Dimension(150, 30));
+        btnGenerate.setBackground(motorPHRed);
         btnGenerate.setForeground(Color.WHITE);
         btnGenerate.setFocusPainted(false);
-        btnGenerate.setPreferredSize(new Dimension(150, 30));
         btnGenerate.addActionListener(e -> generatePayroll());
 
         filter.add(new JLabel("Payroll Period:"));
@@ -101,13 +99,13 @@ public class PayrollFinances extends JPanel {
         JPanel row = new JPanel(new GridLayout(1, 4, 15, 0));
         row.setOpaque(false);
         
-        KPICard card1 = new KPICard("Total Basic", "₱0.00", new Color(128, 0, 0));
+        KPICard card1 = new KPICard("Total Basic", "₱0.00", motorPHRed);
         lblTotalSalary = card1.getValueLabel();
-        KPICard card2 = new KPICard("Total Allowances", "₱0.00", new Color(128, 0, 0));
+        KPICard card2 = new KPICard("Total Allowances", "₱0.00", motorPHRed);
         lblTotalAllowances = card2.getValueLabel();
-        KPICard card3 = new KPICard("Total Gross", "₱0.00", new Color(128, 0, 0));
+        KPICard card3 = new KPICard("Total Gross", "₱0.00", motorPHRed);
         lblTotalGross = card3.getValueLabel();
-        KPICard card4 = new KPICard("Total Net Pay", "₱0.00", new Color(0, 100, 0));
+        KPICard card4 = new KPICard("Total Net Pay", "₱0.00", new Color(40, 167, 69)); // Success Green
         lblTotalNet = card4.getValueLabel();
 
         row.add(card1); row.add(card2); row.add(card3); row.add(card4);
@@ -115,9 +113,10 @@ public class PayrollFinances extends JPanel {
     }
 
     private JPanel createPayrollListTable() {
-        JPanel container = new JPanel(new BorderLayout());
+        // Use the styled tile logic from BasePanel
+        JPanel container = createStyledTile();
+        container.setLayout(new BorderLayout());
         container.setBackground(Color.WHITE);
-        container.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JLabel title = new JLabel("Employee Payroll Summary");
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -130,8 +129,8 @@ public class PayrollFinances extends JPanel {
 
         payrollTable = new JTable(tableModel);
         payrollTable.setRowHeight(35);
-        payrollTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        payrollTable.setSelectionBackground(new Color(128, 0, 0)); 
+        payrollTable.getTableHeader().setFont(cardTitleFont); // Inherited from BasePanel
+        payrollTable.setSelectionBackground(motorPHRed); 
         payrollTable.setSelectionForeground(Color.WHITE);          
         payrollTable.setShowGrid(false);
         payrollTable.setIntercellSpacing(new Dimension(0, 0));
@@ -152,7 +151,11 @@ public class PayrollFinances extends JPanel {
             }
         });
 
-        container.add(new JScrollPane(payrollTable), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(payrollTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        container.add(scrollPane, BorderLayout.CENTER);
+        
         return container;
     }
 
@@ -169,8 +172,9 @@ public class PayrollFinances extends JPanel {
         }
     }
 
+    @Override
     public void refreshData() {
-        if (tableModel == null) return;
+        if (tableModel == null || monthPicker == null || yearPicker == null) return;
         tableModel.setRowCount(0); 
         String month = (String) monthPicker.getSelectedItem();
         String year = (String) yearPicker.getSelectedItem();
@@ -200,7 +204,6 @@ public class PayrollFinances extends JPanel {
             lblTotalGross.setText("₱" + df.format(totalGross));
             lblTotalNet.setText("₱" + df.format(totalNet));
 
-            // Update Charts
             overviewChart.updateData(totalBasic, totalAllowances, totalGross, totalNet);
             breakdownChart.updateData(totalNet, (totalGross - totalNet));
             
@@ -212,18 +215,18 @@ public class PayrollFinances extends JPanel {
         refreshData();
     }
 
-    // --- CHART IMPLEMENTATIONS ---
+    // --- Inner classes for Charts ---
 
     private static class BarChartPanel extends JPanel {
         private double b, a, g, n;
         private final String title;
-        // MotorPH Branding Colors
-        private final Color motorPhMaroon = new Color(128, 0, 0);
+        private final Color motorPhMaroon;
         private final Color motorPhBlack = new Color(30, 30, 30);
         private final Color motorPhLightMaroon = new Color(200, 50, 50);
 
-        public BarChartPanel(String title) {
+        public BarChartPanel(String title, Color themeColor) {
             this.title = title;
+            this.motorPhMaroon = themeColor;
             setBackground(Color.WHITE);
             setPreferredSize(new Dimension(0, 250));
             setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
@@ -240,7 +243,6 @@ public class PayrollFinances extends JPanel {
             Graphics2D g2d = (Graphics2D) g2;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            // Branding Watermark
             g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
             g2d.setColor(new Color(245, 245, 245));
             g2d.drawString("MotorPH", getWidth()/2 - 80, getHeight()/2 + 20);
@@ -253,7 +255,6 @@ public class PayrollFinances extends JPanel {
             int chartH = getHeight() - 100;
             double[] vals = {b, a, g, n};
             String[] lbls = {"Basic", "Allow", "Gross", "Net"};
-            // Theming the bars based on screenshots (Maroon and Darker Shades)
             Color[] clrs = {motorPhMaroon, motorPhLightMaroon, Color.DARK_GRAY, motorPhBlack};
 
             for (int i = 0; i < 4; i++) {
@@ -261,7 +262,6 @@ public class PayrollFinances extends JPanel {
                 int x = 40 + (i * 70);
                 int y = getHeight() - 50 - h;
                 
-                // Gradient for bars
                 GradientPaint gp = new GradientPaint(x, y, clrs[i], x, y + h, clrs[i].darker());
                 g2d.setPaint(gp);
                 g2d.fillRoundRect(x, y, 40, h, 10, 10);
@@ -276,9 +276,11 @@ public class PayrollFinances extends JPanel {
     private static class DoughnutChartPanel extends JPanel {
         private double net, deduct;
         private final String title;
+        private final Color themeColor;
 
-        public DoughnutChartPanel(String title) {
+        public DoughnutChartPanel(String title, Color themeColor) {
             this.title = title;
+            this.themeColor = themeColor;
             setBackground(Color.WHITE);
             setPreferredSize(new Dimension(0, 250));
             setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
@@ -295,7 +297,6 @@ public class PayrollFinances extends JPanel {
             Graphics2D g2d = (Graphics2D) g2;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            // Branding Watermark
             g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
             g2d.setColor(new Color(245, 245, 245));
             g2d.drawString("MotorPH", getWidth()/2 - 80, getHeight()/2 + 20);
@@ -313,21 +314,19 @@ public class PayrollFinances extends JPanel {
             int startAngle = 90;
             int netAngle = (int)((net/total) * 360);
 
-            
             g2d.setColor(new Color(30, 30, 30));
             g2d.fillArc(x, y, diameter, diameter, startAngle, netAngle);
-            g2d.setColor(new Color(128, 0, 0));
+            g2d.setColor(themeColor);
             g2d.fillArc(x, y, diameter, diameter, startAngle + netAngle, 360 - netAngle);
 
             g2d.setColor(Color.WHITE);
-            g2d.fillOval(x + 35, y + 35, 70, 70); // The hole
+            g2d.fillOval(x + 35, y + 35, 70, 70); 
             
-            // Legend
             g2d.setFont(new Font("SansSerif", Font.PLAIN, 10));
             g2d.setColor(new Color(30, 30, 30));
             g2d.fillRect(15, getHeight()-30, 10, 10);
             g2d.drawString("Net Pay", 30, getHeight()-22);
-            g2d.setColor(new Color(128, 0, 0));
+            g2d.setColor(themeColor);
             g2d.fillRect(80, getHeight()-30, 10, 10);
             g2d.drawString("Deductions", 95, getHeight()-22);
         }
@@ -335,7 +334,7 @@ public class PayrollFinances extends JPanel {
 
     private static class KPICard extends JPanel {
         private final JLabel valueLabel;
-        public KPICard(String title, String value, Color iconColor) {
+        public KPICard(String title, String value, Color themeColor) {
             setLayout(new BorderLayout());
             setBackground(Color.WHITE);
             setBorder(BorderFactory.createCompoundBorder(
@@ -354,8 +353,8 @@ public class PayrollFinances extends JPanel {
             iconLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
             iconLabel.setPreferredSize(new Dimension(45, 45));
             iconLabel.setOpaque(true);
-            iconLabel.setBackground(new Color(iconColor.getRed(), iconColor.getGreen(), iconColor.getBlue(), 30));
-            iconLabel.setForeground(iconColor);
+            iconLabel.setBackground(new Color(themeColor.getRed(), themeColor.getGreen(), themeColor.getBlue(), 30));
+            iconLabel.setForeground(themeColor);
             add(textPanel, BorderLayout.CENTER); add(iconLabel, BorderLayout.EAST);
         }
         public JLabel getValueLabel() { return valueLabel; }

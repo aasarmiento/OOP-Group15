@@ -8,7 +8,8 @@ import javax.swing.table.DefaultTableModel;
 import model.Employee;
 import service.EmployeeManagementService;
 
-public class EmployeeDashboard extends JPanel {
+
+public class EmployeeDashboard extends BasePanel {
     private final JTable employeeTable;
     private final DefaultTableModel tableModel;
     private final EmployeeManagementService service; 
@@ -16,10 +17,10 @@ public class EmployeeDashboard extends JPanel {
     private JTextField txtEmpNo, txtLastName, txtFirstName, txtStatus, txtPosition, txtSupervisor;
 
     public EmployeeDashboard(EmployeeManagementService service) {
+        super(); 
         this.service = service; 
-        setLayout(new BorderLayout());
 
-        // 13 Columns as requested
+        
         String[] columns = {
             "ID", "Last Name", "First Name", "Birthday", "Address", "Phone", 
             "SSS", "Philhealth", "TIN", "Pagibig", "Status", "Position", "Supervisor"
@@ -35,17 +36,27 @@ public class EmployeeDashboard extends JPanel {
         
         employeeTable.getSelectionModel().addListSelectionListener(this::handleTableSelection);
         
+        
         add(new JScrollPane(employeeTable), BorderLayout.CENTER);
         add(createBottomPanel(), BorderLayout.SOUTH);
         
+        refreshData();
+    }
+
+    
+    @Override
+    public void refreshData() {
         refreshTable();
     }
 
     private JPanel createBottomPanel() {
         JPanel mainBottom = new JPanel(new BorderLayout());
+        mainBottom.setOpaque(false); // Maintain clean UI look
         mainBottom.setBorder(BorderFactory.createTitledBorder("Employee Information"));
 
         JPanel formPanel = new JPanel(new GridLayout(3, 4, 10, 10));
+        formPanel.setOpaque(false);
+        
         txtEmpNo = new JTextField(); txtLastName = new JTextField();
         txtFirstName = new JTextField(); txtStatus = new JTextField();
         txtPosition = new JTextField(); txtSupervisor = new JTextField();
@@ -58,6 +69,9 @@ public class EmployeeDashboard extends JPanel {
         formPanel.add(new JLabel("Supervisor:")); formPanel.add(txtSupervisor);
 
         JPanel buttonPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        buttonPanel.setOpaque(false);
+        
+        
         buttonPanel.add(UIUtils.createButton("Calculate Salary", new Color(52, 58, 235), Color.white));
         buttonPanel.add(UIUtils.createButton("Set Password", new Color(235, 122, 52), Color.white));
         buttonPanel.add(UIUtils.createButton("Update Employee", new Color(0, 150, 0), Color.white));
@@ -114,5 +128,6 @@ public class EmployeeDashboard extends JPanel {
         return (val == null) ? "" : val.toString();
     }
 
+   
     public void reloadCSV() { refreshTable(); }
 }

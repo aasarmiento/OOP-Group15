@@ -9,7 +9,7 @@ import model.Employee;
 import service.HRSerbisyo;
 import service.LeaveService;
 
-public class LeaveApprovalPanel extends JPanel {
+public class LeaveApprovalPanel extends BasePanel {
     private final LeaveService leaveService;
     private final Employee currentUser;
     private final HRSerbisyo hrSerbisyo;
@@ -19,23 +19,21 @@ public class LeaveApprovalPanel extends JPanel {
     private JTextArea txtDetailReason;
     private JLabel lblDetailID, lblDetailEmployee, lblDetailType, lblPendingCount;
 
-    private final Color primaryMaroon = new Color(128, 0, 0);
-    private final Color bgColor = new Color(245, 245, 245);
-    private final Color tileBg = new Color(248, 248, 248);
+    private final Color primaryMaroon = UIUtils.MOTORPH_MAROON;
+    private final Color bgColor = UIUtils.BG_LIGHT;
+    private final Color tileBg = Color.WHITE;
     private final Font titleFont = new Font("DM Sans Bold", Font.BOLD, 18);
-    private final Font bodyFont = new Font("DM Sans Regular", Font.PLAIN, 13);
-    private final Font cardTitleFont = new Font("DM Sans Bold", Font.BOLD, 12);
+    private final Font bodyFont = UIUtils.FONT_BODY;
+    private final Font cardTitleFont = UIUtils.FONT_LABEL;
     
     private final String[] cols = {"Leave ID", "Emp ID", "Last Name", "First Name", "Type", "Start Date", "End Date", "Reason", "Status"};
 
     public LeaveApprovalPanel(LeaveService leaveService, HRSerbisyo hrSerbisyo, Employee user) {
+        super(); 
         this.leaveService = leaveService;
         this.hrSerbisyo = hrSerbisyo;
         this.currentUser = user;
         
-        setLayout(new BorderLayout());
-        setBackground(bgColor);
-
         this.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentShown(java.awt.event.ComponentEvent e) {
@@ -46,9 +44,15 @@ public class LeaveApprovalPanel extends JPanel {
         checkAccessFirewall();
     }
 
+    @Override
+    public void refreshData() {
+        if (model != null) {
+            refreshUI();
+        }
+    }
+
     private void checkAccessFirewall() {
         removeAll();
-        
         String role = currentUser.getRole().name();
         
         if (!role.equalsIgnoreCase("HR_STAFF") && !role.equalsIgnoreCase("ADMIN")) {
@@ -66,19 +70,15 @@ public class LeaveApprovalPanel extends JPanel {
     private void showAccessDenied() {
         JPanel deniedPanel = new JPanel(new GridBagLayout());
         deniedPanel.setBackground(bgColor);
-        
         JLabel lblMessage = new JLabel("ACCESS DENIED: HR AUTHORIZATION REQUIRED");
         lblMessage.setFont(new Font("DM Sans Bold", Font.BOLD, 22));
         lblMessage.setForeground(primaryMaroon);
-        
         deniedPanel.add(lblMessage);
-        
         add(deniedPanel, BorderLayout.CENTER);
     }
 
     private void initFullUI() {
         setLayout(new BorderLayout(20, 20));
-        
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -89,10 +89,23 @@ public class LeaveApprovalPanel extends JPanel {
         add(createMainContentArea(), BorderLayout.CENTER);
     }
 
+    /**
+     * FIXED: Added validation to prevent re-processing of already decided requests.
+     */
     private void handleAction(String status) {
         int row = table.getSelectedRow();
         if (row == -1) {
             JOptionPane.showMessageDialog(this, "Please select a leave request first.");
+            return;
+        }
+
+        // VALIDATION: Check the current status in the table (Column 8)
+        String currentStatus = table.getValueAt(row, 8).toString();
+        if (!currentStatus.equalsIgnoreCase("PENDING")) {
+            JOptionPane.showMessageDialog(this, 
+                "This request has already been " + currentStatus + ". Decisions cannot be undone.", 
+                "Action Prohibited", 
+                JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -123,7 +136,6 @@ public class LeaveApprovalPanel extends JPanel {
     private JPanel createMainContentArea() {
         JPanel container = new JPanel(new BorderLayout(25, 0));
         container.setOpaque(false);
-
         container.add(createApprovalActionForm(), BorderLayout.WEST);
 
         JPanel rightPanel = new JPanel(new BorderLayout(0, 20));
@@ -138,7 +150,6 @@ public class LeaveApprovalPanel extends JPanel {
         
         rightPanel.add(tableCard, BorderLayout.CENTER);
         rightPanel.add(createDetailsPanel(), BorderLayout.SOUTH);
-
         container.add(rightPanel, BorderLayout.CENTER);
         return container;
     }
@@ -260,10 +271,7 @@ public class LeaveApprovalPanel extends JPanel {
         table.setSelectionBackground(primaryMaroon);
         table.setShowVerticalLines(false);
         table.setGridColor(new Color(235, 235, 235));
-        
-        // --- SINGLE SELECTION LOGIC ADDED HERE ---
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
         setupStatusRenderer();
     }
 

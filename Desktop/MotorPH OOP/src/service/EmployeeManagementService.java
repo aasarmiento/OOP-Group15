@@ -103,7 +103,8 @@ public class EmployeeManagementService {
         return registerEmployee((IAdminOperations)actor, newEmp);
     }
 
-   public boolean registerEmployee(model.IAdminOperations actor, model.Employee emp) {
+    // FIXED: Now respects the role selected in the UI
+    public boolean registerEmployee(model.IAdminOperations actor, model.Employee emp) {
         if (actor == null || emp == null) return false;
 
         if (emp.getFirstName().trim().isEmpty() || emp.getLastName().trim().isEmpty()) {
@@ -111,8 +112,12 @@ public class EmployeeManagementService {
             return false;
         }
 
-        Role assignedRole = mapPositionToRole(emp.getPosition());
-        emp.setRole(assignedRole);
+        // Only override the role if the current role is null. 
+        // If the UI already set a role, we keep it.
+        if (emp.getRole() == null) {
+            Role assignedRole = mapPositionToRole(emp.getPosition());
+            emp.setRole(assignedRole);
+        }
 
         int nextId = employeeDao.getNextAvailableId();
         if (nextId <= 0) nextId = 10001; 
@@ -127,74 +132,103 @@ public class EmployeeManagementService {
         if (empSaved) {
             String fName = emp.getFirstName().trim();
             String lName = emp.getLastName().trim().replaceAll("\\s+", "");
+            
+            // Generate username consistently: FirstLetter + LastNameFormatted
             String generatedUsername = fName.substring(0, 1).toUpperCase() + 
                                      lName.substring(0, 1).toUpperCase() + 
                                      lName.substring(1).toLowerCase();
             
+            // Pass the employee's current role to the login credentials
             return employeeDao.createLoginCredentials(
                 emp.getEmpNo(), 
                 generatedUsername, 
                 "1234", 
-                assignedRole.name() 
+                emp.getRole().name() 
             );
         }
         return false;
     }
 
-    public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
-        try {
-            if (!(actor instanceof IAdminOperations)) { 
-                showError("Access Denied."); 
-                return false; 
-            }
-            
-            String bdayText = fields[4].getText().trim();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-            LocalDate birthday = bdayText.contains("-") ? LocalDate.parse(bdayText) : LocalDate.parse(bdayText, formatter);
-
-            String position = fields[12].getText().trim();
-            Role assignedRole = mapPositionToRole(position);
-
-            // Create correct instance based on Mapped Role
-            Employee emp = createEmployeeInstance(assignedRole.name());
-
-            emp.setEmpNo(Integer.parseInt(fields[0].getText().trim()));
-            emp.setLastName(fields[1].getText().trim());
-            emp.setFirstName(fields[2].getText().trim());
-            emp.setGender(fields[3].getText().trim()); 
-            emp.setBirthday(birthday);
-            emp.setAddress(fields[5].getText().trim());
-            emp.setPhone(fields[6].getText().trim());
-            emp.setSss(fields[7].getText().trim());
-            emp.setPhilhealth(fields[8].getText().trim());
-            emp.setTin(fields[9].getText().trim());
-            emp.setPagibig(fields[10].getText().trim());
-            emp.setStatus(fields[11].getText().trim());
-            emp.setPosition(position);
-            emp.setSupervisor(fields[13].getText().trim());
-            emp.setRole(assignedRole);
-
-            double basic = parseDouble(fields[14].getText());
-            emp.setBasicSalary(basic);
-            emp.setRiceSubsidy(parseDouble(fields[15].getText()));
-            emp.setPhoneAllowance(parseDouble(fields[16].getText()));
-            emp.setClothingAllowance(parseDouble(fields[17].getText()));
-            
-            emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
-            emp.setHourlyRate(basic / 21 / 8); 
-
-            return employeeDao.update(emp);
-        } catch (Exception e) {
-            showError("Update Error: " + e.getMessage());
-            return false;
+   
+public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
+    try {
+        // 1. Security check - Keep your original logic
+        if (!(actor instanceof model.IAdminOperations)) { 
+            showError("Access Denied."); 
+            return false; 
         }
+        
+        // 2. Handle Birthday Parsing - Keep your original logic
+        String bdayText = fields[4].getText().trim();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+        LocalDate birthday = bdayText.contains("-") ? LocalDate.parse(bdayText) : LocalDate.parse(bdayText, formatter);
+
+        String position = fields[12].getText().trim();
+        
+        // --- MAPPING LOGIC START ---
+        // Retrieve the role string from the UI field (index 20)
+        String roleNameFromForm = fields[20].getText().trim(); 
+        Role assignedRole;
+        
+        try {
+            // Check if it's the Enum name (e.g., "IT_STAFF")
+            assignedRole = Role.valueOf(roleNameFromForm);
+        } catch (IllegalArgumentException e) {
+            // Fallback: Map from the Label (e.g., "IT Staff") using your helper
+            assignedRole = Role.fromLabel(roleNameFromForm);
+        }
+        // --- MAPPING LOGIC END ---
+
+        // 3. Create the correct instance (Admin, HRStaff, etc.)
+        Employee emp = createEmployeeInstance(assignedRole.name());
+
+        // 4. Map the standard fields - Keep your original logic
+        emp.setEmpNo(Integer.parseInt(fields[0].getText().trim()));
+        emp.setLastName(fields[1].getText().trim());
+        emp.setFirstName(fields[2].getText().trim());
+        emp.setGender(fields[3].getText().trim()); 
+        emp.setBirthday(birthday);
+        emp.setAddress(fields[5].getText().trim());
+        emp.setPhone(fields[6].getText().trim());
+        emp.setSss(fields[7].getText().trim());
+        emp.setPhilhealth(fields[8].getText().trim());
+        emp.setTin(fields[9].getText().trim());
+        emp.setPagibig(fields[10].getText().trim());
+        emp.setStatus(fields[11].getText().trim());
+        emp.setPosition(position);
+        emp.setSupervisor(fields[13].getText().trim());
+        
+        // 5. Hard-set the role and calculate rates - Keep your original logic
+        emp.setRole(assignedRole);
+
+        double basic = parseDouble(fields[14].getText());
+        emp.setBasicSalary(basic);
+        emp.setRiceSubsidy(parseDouble(fields[15].getText()));
+        emp.setPhoneAllowance(parseDouble(fields[16].getText()));
+        emp.setClothingAllowance(parseDouble(fields[17].getText()));
+        
+        emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
+        emp.setHourlyRate(basic / 21 / 8); 
+
+        // 6. Persist to CSV
+        boolean success = employeeDao.update(emp);
+        
+        if (success) {
+            // CRITICAL SYNC: Update the login credentials CSV so the login system matches the new data
+            employeeDao.createLoginCredentials(emp.getEmpNo(), null, null, assignedRole.name());
+        }
+        
+        return success;
+    } catch (Exception e) {
+        System.err.println("Update Error: " + e.getMessage());
+        return false;
     }
+}
 
     public PeriodSummary getPayrollForEmployee(int empNo, String month, String year) {
         Employee emp = employeeDao.findById(empNo);
         Object[][] logs = attendanceDao.getAttendanceByMonth(empNo, month, year);
         service.PayrollCalculator calc = new service.PayrollCalculator();
-        // Passing 'this' to maintain service context
         PayrollService payrollService = new PayrollService(employeeDao, calc, this);
         DateTimeFormatter csvDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         double totalHours = 0;

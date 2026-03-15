@@ -16,7 +16,8 @@ import model.IAdminOperations;
 import service.EmployeeManagementService;
 import util.EmployeeDetailForm;
 
-public class EmployeeDatabase extends JPanel {
+// Updated to extend BasePanel and leverage inherited styling methods
+public class EmployeeDatabase extends BasePanel {
     private CardLayout masterlistLayout;
     private JPanel masterlistContainer;
     private DefaultTableModel empTableModel;
@@ -26,19 +27,24 @@ public class EmployeeDatabase extends JPanel {
     private final EmployeeManagementService employeeManagementService;
     private final Employee currentUser;
 
-    private final Color MOTORPH_MAROON = new Color(128, 0, 0);
-    private final Color BACKGROUND_COLOR = new Color(245, 245, 245);
+    // Use values from UIUtils for consistency
+    private final Color MOTORPH_MAROON = UIUtils.MOTORPH_MAROON;
     private final Font titleFont = new Font("DM Sans Bold", Font.BOLD, 20);
-    private final Font headerFont = new Font("DM Sans Bold", Font.BOLD, 12);
-    private final Font bodyFont = new Font("DM Sans Regular", Font.PLAIN, 13);
     private final String REQ_HEX = "#E57373"; 
 
     public EmployeeDatabase(EmployeeManagementService service, Employee user) {
+        super(); // Initializes BasePanel layout, background, and padding
         this.employeeManagementService = service;
         this.currentUser = user;
-        setLayout(new BorderLayout());
-        setBackground(BACKGROUND_COLOR);
-        add(createMasterlistPanel());
+        
+        // Add the main masterlist container to this BasePanel
+        add(createMasterlistPanel(), BorderLayout.CENTER);
+        refreshData();
+    }
+
+   
+    @Override
+    public void refreshData() {
         refreshTable();
     }
 
@@ -49,7 +55,8 @@ public class EmployeeDatabase extends JPanel {
 
         JPanel tableView = new JPanel(new BorderLayout(20, 20));
         tableView.setOpaque(false);
-        tableView.setBorder(new EmptyBorder(30, 30, 30, 30));
+        
+        tableView.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
@@ -70,6 +77,7 @@ public class EmployeeDatabase extends JPanel {
         topPanel.add(lblTitle, BorderLayout.WEST);
         topPanel.add(searchField, BorderLayout.EAST);
 
+       
         JPanel tableContainer = createStyledTile();
         tableContainer.setLayout(new BorderLayout());
 
@@ -79,9 +87,7 @@ public class EmployeeDatabase extends JPanel {
         };
         empTable = new JTable(empTableModel);
         
-        // FIX: Set selection mode to single so only one row can be highlighted at a time
         empTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
         empTable.setRowHeight(35);
         empTable.setFont(bodyFont);
         empTable.setShowGrid(false);
@@ -89,7 +95,7 @@ public class EmployeeDatabase extends JPanel {
         empTable.setSelectionBackground(MOTORPH_MAROON);
 
         JTableHeader tableHeader = empTable.getTableHeader();
-        tableHeader.setFont(headerFont);
+        tableHeader.setFont(cardTitleFont); 
         tableHeader.setBackground(Color.WHITE);
         tableHeader.setForeground(Color.GRAY);
         tableHeader.setPreferredSize(new Dimension(0, 40));
@@ -181,10 +187,10 @@ public class EmployeeDatabase extends JPanel {
         return masterlistContainer;
     }
 
-   private JPanel createNewHireFormPanel() {
+    private JPanel createNewHireFormPanel() {
         JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(BACKGROUND_COLOR);
-        wrapper.setBorder(new EmptyBorder(30, 40, 30, 40));
+        wrapper.setOpaque(false);
+        wrapper.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         JLabel formTitle = new JLabel("New Employee Registration");
         formTitle.setFont(titleFont);
@@ -199,7 +205,8 @@ public class EmployeeDatabase extends JPanel {
         JTextField pallow = createStyledTextField("0"); applyFilters(15, pallow);
         JTextField cloth = createStyledTextField("0"); applyFilters(16, cloth);
 
-        JPanel personalPanel = createFormSection("Personal Information", 3, 2);
+        // Use inherited createSection from BasePanel
+        JPanel personalPanel = createSection("Personal Information", 3, 2);
         JTextField fName = createStyledTextField("Juan"); applyFilters(100, fName); 
         JTextField lName = createStyledTextField("Delacruz"); applyFilters(100, lName); 
         JTextField bday = createStyledTextField("MM/dd/yyyy"); bday.setEditable(false); bday.setBackground(Color.WHITE);
@@ -225,7 +232,7 @@ public class EmployeeDatabase extends JPanel {
         addFormField(personalPanel, "Gender:", genderCombo); 
         addFormField(personalPanel, "<html>Phone Number" + ast + "</html>", phone);
 
-        JPanel govPanel = createFormSection("Identification & Status", 3, 2);
+        JPanel govPanel = createSection("Identification & Status", 3, 2);
         JTextField sss = createStyledTextField("00-0000000-0"); applyFilters(6, sss);
         JTextField phil = createStyledTextField("000000000000"); applyFilters(7, phil);
         JTextField tin = createStyledTextField("000-000-000-000"); applyFilters(8, tin);
@@ -238,7 +245,7 @@ public class EmployeeDatabase extends JPanel {
         addFormField(govPanel, "<html>Pag-ibig #" + ast + "</html>", pagibig);
         addFormField(govPanel, "Status:", status);
 
-        JPanel jobPanel = createFormSection("Employment Details", 2, 2);
+        JPanel jobPanel = createSection("Employment Details", 2, 2);
         String[] positions = {"Chief Operating Officer", "Chief Finance Officer", "Chief Marketing Officer", "IT Operations and Systems", "HR Manager", "Accounting Head", "Payroll Manager", "Account Manager", "Sales & Marketing", "HR Team Leader", "Payroll Team Leader", "Account Team Leader"};
         JComboBox<String> posCombo = new JComboBox<>(positions);
         JComboBox<String> supervCombo = new JComboBox<>(new String[]{"N/A"});
@@ -271,7 +278,7 @@ public class EmployeeDatabase extends JPanel {
         addFormField(jobPanel, "Supervisor:", supervCombo);
         addFormField(jobPanel, "Access Role:", roleCombo); 
 
-        JPanel financePanel = createFormSection("Financial Information", 2, 2);
+        JPanel financePanel = createSection("Financial Information", 2, 2);
         addFormField(financePanel, "<html>Monthly Basic Salary" + ast + "</html>", basicSalaryInput);
         addFormField(financePanel, "Rice Subsidy:", rice);
         addFormField(financePanel, "Phone Allowance:", pallow);
@@ -300,10 +307,24 @@ public class EmployeeDatabase extends JPanel {
         });
 
         btnSave.addActionListener(e -> {
-            if (fName.getText().trim().isEmpty() || fName.getText().equals("Juan") ||
-                lName.getText().trim().isEmpty() || lName.getText().equals("Delacruz") ||
-                basicSalaryInput.getText().trim().isEmpty() || basicSalaryInput.getText().equals("0.00")) {
-                JOptionPane.showMessageDialog(this, "Please fill out all required fields (*).", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            String salaryStr = basicSalaryInput.getText().replaceAll("[^\\d.]", "");
+            double salaryVal = salaryStr.isEmpty() ? 0 : Double.parseDouble(salaryStr);
+
+            boolean isMissingRequired = fName.getText().trim().isEmpty() || fName.getText().equals("Juan") ||
+                                        lName.getText().trim().isEmpty() || lName.getText().equals("Delacruz") ||
+                                        bday.getText().equals("MM/dd/yyyy") ||
+                                        address.getText().trim().isEmpty() || address.getText().equals("Address line...") ||
+                                        phone.getText().trim().isEmpty() || phone.getText().equals("000-000-000");
+
+            boolean isMissingGov = sss.getText().equals("00-0000000-0") ||
+                                   phil.getText().equals("000000000000") ||
+                                   tin.getText().equals("000-000-000-000") ||
+                                   pagibig.getText().equals("000000000000");
+
+            if (isMissingRequired || isMissingGov || salaryVal <= 0) {
+                JOptionPane.showMessageDialog(this, 
+                    "Registration Failed:\n- All required fields (*) must be filled.\n\n", 
+                    "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -325,10 +346,8 @@ public class EmployeeDatabase extends JPanel {
             newEmp.setRole(model.Role.fromString(selectedRoleLabel));
 
             try {
-                if(!bday.getText().equals("MM/dd/yyyy")) {
-                    newEmp.setBirthday(java.time.LocalDate.parse(bday.getText().trim(), java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")));
-                }
-                newEmp.setBasicSalary(Double.parseDouble(basicSalaryInput.getText().replaceAll("[^\\d.]", "")));
+                newEmp.setBirthday(java.time.LocalDate.parse(bday.getText().trim(), java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+                newEmp.setBasicSalary(salaryVal);
                 newEmp.setRiceSubsidy(Double.parseDouble(rice.getText().replaceAll("[^\\d.]", "")));
                 newEmp.setPhoneAllowance(Double.parseDouble(pallow.getText().replaceAll("[^\\d.]", "")));
                 newEmp.setClothingAllowance(Double.parseDouble(cloth.getText().replaceAll("[^\\d.]", "")));
@@ -360,23 +379,9 @@ public class EmployeeDatabase extends JPanel {
 
     private void clearFormFields(JTextField... fields) {
         String[] hints = {"Juan", "Delacruz", "MM/dd/yyyy", "Address line...", "000-000-000", "00-0000000-0", "000000000000", "000-000-000-000", "000000000000", "0.00", "0", "0", "0"};
-        for (int i = 0; i < fields.length; i++) setupPlaceholder(fields[i], hints[i]);
-    }
-
-    private JPanel createStyledTile() {
-        JPanel panel = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 20, 20);
-                g2.setColor(new Color(225, 225, 225));
-                g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 20, 20);
-                g2.dispose();
-            }
-        };
-        panel.setOpaque(false); panel.setBorder(new EmptyBorder(15, 15, 15, 15));
-        return panel;
+        for (int i = 0; i < fields.length; i++) {
+            if (i < hints.length) setupPlaceholder(fields[i], hints[i]);
+        }
     }
 
     private JTextField createStyledTextField(String hint) {
@@ -384,21 +389,17 @@ public class EmployeeDatabase extends JPanel {
         setupPlaceholder(f, hint); return f;
     }
 
-    private JPanel createFormSection(String title, int r, int c) {
-        JPanel p = createStyledTile(); p.setLayout(new GridLayout(r, c, 20, 10));
-        p.setBorder(BorderFactory.createCompoundBorder(p.getBorder(), BorderFactory.createTitledBorder(null, " " + title + " ", 0, 0, headerFont, MOTORPH_MAROON)));
-        return p;
-    }
-
     private void styleButton(JButton btn, Color bg) {
-        btn.setFont(headerFont); btn.setForeground(Color.WHITE); btn.setBackground(bg);
+        btn.setFont(cardTitleFont); btn.setForeground(Color.WHITE); btn.setBackground(bg);
         btn.setOpaque(true); btn.setBorderPainted(false); btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void setupPlaceholder(JTextField field, String hint) {
         field.setText(hint); field.setForeground(Color.GRAY);
         field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
             public void focusGained(java.awt.event.FocusEvent e) { if (field.getText().equals(hint)) { field.setText(""); field.setForeground(Color.BLACK); } }
+           @Override
             public void focusLost(java.awt.event.FocusEvent e) { if (field.getText().trim().isEmpty()) { field.setForeground(Color.GRAY); field.setText(hint); } }
         });
     }
@@ -427,6 +428,7 @@ public class EmployeeDatabase extends JPanel {
             case 8: doc.setDocumentFilter(new util.MaskFormatterFilter("###-###-###-###")); break;
             case 13: case 14: case 15: case 16: doc.setDocumentFilter(new util.NumericLimitFilter(7)); break;
             case 100: doc.setDocumentFilter(new javax.swing.text.DocumentFilter() {
+                @Override
                 public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
                     if (text.matches("[a-zA-Z\\s]*")) super.replace(fb, offset, length, text, attrs);
                 }

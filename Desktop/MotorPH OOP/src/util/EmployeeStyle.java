@@ -1,66 +1,77 @@
 package util;
 
+import dao.CSVHandler;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.GridLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
-import dao.CSVHandler;
-
+import model.Employee;
 import model.RegularStaff;
 import ui.UIUtils;
-import dao.CSVHandler; // This points to your DAO package
-    
-import model.Employee;
-import model.Admin;
-import model.RegularStaff;
-
 
 public class EmployeeStyle extends JFrame {
 
-    // 1. DATA LAYER
-    private CSVHandler csvHandler = new CSVHandler();
+    // Added 'final' to satisfy the IDE warnings and kept the same variable names
+    private final CSVHandler csvHandler = new CSVHandler();
     
-    // 2. UI COMPONENTS (Created using your UIUtils)
-    private JTextField txtEmpNo = UIUtils.createTextField(false); // Read-only
-    private JTextField txtLastName = UIUtils.createTextField(true);
-    private JTextField txtFirstName = UIUtils.createTextField(true);
-    // ... add others for personal/financial info
+    private final JTextField txtEmpNo = UIUtils.createTextField(false); 
+    private final JTextField txtLastName = UIUtils.createTextField(true);
+    private final JTextField txtFirstName = UIUtils.createTextField(true);
+    private final JTextField txtBirthday = UIUtils.createTextField(true); 
+    private final JTextField txtAddress = UIUtils.createTextField(true);  
+    private final JTextField txtPhone = UIUtils.createTextField(true);    
     
-    public EmployeeManagementFrame() {
+    public EmployeeStyle() {
         setTitle("MotorPH Employee Management System");
         setLayout(new BorderLayout());
         
-        // 3. BUILDING THE PANELS
         JPanel infoContainer = new JPanel(new GridLayout(1, 3, 10, 10));
         
-        // Using your UIUtils to build the groups
-        infoContainer.add(UIUtils.createEmployeeInfoPanel(txtEmpNo, txtLastName, txtFirstName, ...));
-        infoContainer.add(UIUtils.createPersonalInfoPanel(...));
-        infoContainer.add(UIUtils.createFinancialInfoPanel(...));
+        infoContainer.add(UIUtils.createEmployeeInfoPanel(
+            txtEmpNo, 
+            txtLastName, 
+            txtFirstName, 
+            txtBirthday, 
+            txtAddress, 
+            txtPhone
+        ));
         
         add(infoContainer, BorderLayout.CENTER);
         
-        // 4. ADD THE SAVE BUTTON
         JButton btnSave = UIUtils.createButton("Save Changes", Color.BLUE, Color.WHITE);
         btnSave.addActionListener(e -> handleSave());
         add(btnSave, BorderLayout.SOUTH);
+
+        setSize(900, 600);
+        setLocationRelativeTo(null);
     }
 
-    private void handleSave() {
-        // This connects your UI back to the Model and DAO
+ private void handleSave() {
         try {
             int id = Integer.parseInt(txtEmpNo.getText());
-            // Create the Employee object based on UI input
-            // (Assuming RegularStaff for this example)
-            Employee emp = new RegularStaff(id, txtLastName.getText(), txtFirstName.getText(), ...);
+            String ln = txtLastName.getText();
+            String fn = txtFirstName.getText();
+
+            // Match the constructor requirement: (int, String, String, LocalDate, double)
+            java.time.LocalDate placeholderDate = java.time.LocalDate.now();
+            double placeholderSalary = 0.0;
+
+            Employee emp = new RegularStaff(id, ln, fn, placeholderDate, placeholderSalary);
             
-            csvHandler.add(emp); // This triggers your CSV writing logic!
+            // FIX: Changed .addRow(emp) to .create(emp) 
+            // This matches the method in your CSVHandler.java
+            csvHandler.create(emp); 
+            
             JOptionPane.showMessageDialog(this, "Employee Saved Successfully!");
+            
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid Employee ID format.");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error saving: " + ex.getMessage());
         }
     }
-}
 }

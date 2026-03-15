@@ -6,7 +6,8 @@ import javax.swing.*;
 import model.Employee;
 import service.EmployeeManagementService;
 
-public class FullDetailsPanel extends JPanel {
+
+public class FullDetailsPanel extends BasePanel {
     private final EmployeeManagementService service;
     private final Employee employee;
 
@@ -16,13 +17,20 @@ public class FullDetailsPanel extends JPanel {
     private JLabel lblProfilePic;
 
     public FullDetailsPanel(EmployeeManagementService service, Employee currentUser) {
+        super(); 
         this.service = service;
         this.employee = currentUser;
 
-        this.setLayout(new BorderLayout());
-
+       
         this.add(createHomePanel(), BorderLayout.CENTER); 
 
+      
+        refreshData();
+    }
+
+   
+    @Override
+    public void refreshData() {
         if (this.employee != null) {
             loadPersonalDetails(this.employee);
         }
@@ -64,28 +72,28 @@ public class FullDetailsPanel extends JPanel {
     private JPanel createHomePanel() {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        mainPanel.setOpaque(false); 
 
-        JPanel infoPanel = new JPanel(new BorderLayout(15, 0));
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Employee Information"));
+        JPanel infoSection = createSection("Employee Information", 1, 1);
+        infoSection.setLayout(new BorderLayout(15, 0));
 
         lblProfilePic = new JLabel("No Image");
         lblProfilePic.setPreferredSize(new Dimension(150, 150));
-        lblProfilePic.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        lblProfilePic.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         lblProfilePic.setHorizontalAlignment(JLabel.CENTER);
-        infoPanel.add(lblProfilePic, BorderLayout.WEST);
+        infoSection.add(lblProfilePic, BorderLayout.WEST);
 
         JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 5));
+        fieldsPanel.setOpaque(false);
         txtEmpNo = addField(fieldsPanel, "Employee No:");
         txtLastName = addField(fieldsPanel, "Last Name:");
         txtFirstName = addField(fieldsPanel, "First Name:");
         txtStatus = addField(fieldsPanel, "Status:");
         txtPosition = addField(fieldsPanel, "Position:");
         txtSupervisor = addField(fieldsPanel, "Supervisor:");
-        infoPanel.add(fieldsPanel, BorderLayout.CENTER);
+        infoSection.add(fieldsPanel, BorderLayout.CENTER);
 
-        JPanel personalPanel = new JPanel(new GridLayout(4, 2, 10, 5));
-        personalPanel.setBorder(BorderFactory.createTitledBorder("Personal Details"));
+        JPanel personalPanel = createSection("Personal Details", 4, 2);
         txtBirthday = addField(personalPanel, "Birthday:");
         txtAddress = addField(personalPanel, "Address:");
         txtPhone = addField(personalPanel, "Phone:");
@@ -94,37 +102,34 @@ public class FullDetailsPanel extends JPanel {
         txtTin = addField(personalPanel, "TIN:");
         txtPagibig = addField(personalPanel, "Pag-IBIG:");
 
-        // 3. Financial Section
-        JPanel financePanel = new JPanel(new GridLayout(3, 2, 10, 5));
-        financePanel.setBorder(BorderFactory.createTitledBorder("Financial Information"));
+        JPanel financePanel = createSection("Financial Information", 3, 2);
         txtSalary = addField(financePanel, "Basic Salary:");
         txtRice = addField(financePanel, "Rice Subsidy:");
         txtPhoneAllowance = addField(financePanel, "Phone Allowance:");
-        txtClothing = addField(financePanel, "Clothing Allowance:"); // Fixed: Added this back
+        txtClothing = addField(financePanel, "Clothing Allowance:"); 
         txtGross = addField(financePanel, "Gross Rate:");
         txtHourly = addField(financePanel, "Hourly Rate:");
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        actionPanel.setOpaque(false);
         JButton btnUpdate = new JButton("Update Info");
+        btnUpdate.setBackground(UIUtils.MOTORPH_MAROON);
+        btnUpdate.setForeground(Color.WHITE);
+        btnUpdate.setFocusPainted(false);
+        
         btnUpdate.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Update functionality coming soon.");
         });
         actionPanel.add(btnUpdate);
 
-        mainPanel.add(infoPanel);
+        mainPanel.add(infoSection);
+        mainPanel.add(Box.createVerticalStrut(15));
         mainPanel.add(personalPanel);
+        mainPanel.add(Box.createVerticalStrut(15));
         mainPanel.add(financePanel);
         mainPanel.add(actionPanel);
 
         return mainPanel;
-    }
-
-    private JTextField addField(JPanel panel, String label) {
-        panel.add(new JLabel(label));
-        JTextField field = new JTextField();
-        field.setEditable(false); 
-        panel.add(field);
-        return field;
     }
 
     private void displayEmployeePhoto(JLabel photoLabel) {

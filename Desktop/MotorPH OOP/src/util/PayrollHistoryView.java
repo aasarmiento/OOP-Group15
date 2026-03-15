@@ -1,7 +1,7 @@
 package util;
 
 import java.awt.*;
-import java.text.DecimalFormat; // Added for formatting
+import java.text.DecimalFormat; 
 import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -52,12 +52,14 @@ public class PayrollHistoryView extends JPanel {
         add(new JScrollPane(historyTable), BorderLayout.CENTER);
     }
 
-    private void showDetailedPayslip(int empId) {
+   private void showDetailedPayslip(int empId) {
         Employee selectedEmp = empService.getEmployeeDao().findById(empId);
         if (selectedEmp != null) {
             MyPayslip payslipPanel = new MyPayslip(empService, calculator, payrollService, selectedEmp);
             
-            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Detailed Payroll Record", true);
+            Window parentWindow = SwingUtilities.getWindowAncestor(this);
+            JDialog dialog = new JDialog(parentWindow, "Detailed Payroll Record", Dialog.ModalityType.APPLICATION_MODAL);
+            
             dialog.add(payslipPanel);
             dialog.setSize(650, 850); 
             dialog.setLocationRelativeTo(this);
@@ -73,7 +75,7 @@ public class PayrollHistoryView extends JPanel {
             for (Object[] row : historyData) {
                 try {
                     double netPayValue = Double.parseDouble(row[3].toString());
-                    row[3] = df.format(netPayValue); // This fixes the long decimals!
+                    row[3] = df.format(netPayValue); 
                 } catch (Exception e) {
                 }
                 tableModel.addRow(row);

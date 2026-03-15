@@ -10,7 +10,8 @@ import model.Employee;
 import model.ITTicket;
 import service.ITSupportService;
 
-public class ITSupportPanel extends JPanel {
+// Updated to extend BasePanel
+public class ITSupportPanel extends BasePanel {
     private final ITSupportService itService;
     private final Employee currentUser;
     
@@ -18,12 +19,12 @@ public class ITSupportPanel extends JPanel {
     private JTable table;
     private JLabel lblActiveTicketsCount; 
 
-    private final Color primaryMaroon = new Color(128, 0, 0);
-    private final Color bgColor = new Color(245, 245, 245);
-    private final Color tileBg = new Color(248, 248, 248);
+    private final Color primaryMaroon = UIUtils.MOTORPH_MAROON;
+    private final Color bgColor = UIUtils.BG_LIGHT;
+    private final Color tileBg = Color.WHITE;
     private final Font titleFont = new Font("DM Sans Bold", Font.BOLD, 18);
-    private final Font bodyFont = new Font("DM Sans Regular", Font.PLAIN, 13);
-    private final Font cardTitleFont = new Font("DM Sans Bold", Font.BOLD, 12);
+    private final Font bodyFont = UIUtils.FONT_BODY;
+    private final Font cardTitleFont = UIUtils.FONT_LABEL;
     
     private JComboBox<String> cbIssueType;
     private JTextArea txtDescription, txtDetailView;
@@ -32,11 +33,11 @@ public class ITSupportPanel extends JPanel {
     private final String[] cols = {"ID", "Emp No", "Username", "Type", "Status", "Created", "Resolved By", "Description"};
 
     public ITSupportPanel(ITSupportService itService, Employee user) {
+        super(); // Initializes BasePanel background and layout
         this.itService = itService;
         this.currentUser = user;
         
-        setLayout(new BorderLayout(20, 20));
-        setBackground(bgColor);
+        // BasePanel already sets BorderLayout and Background
         setBorder(new EmptyBorder(25, 40, 25, 40));
         
         model = new DefaultTableModel(cols, 0) {
@@ -44,15 +45,19 @@ public class ITSupportPanel extends JPanel {
         };
         table = new JTable(model);
         
-        // --- ADDED SINGLE SELECTION MODE ---
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        // ------------------------------------
         
         styleTable();
         
         add(createTopKPIDashboard(), BorderLayout.NORTH);
         add(createMainContentArea(), BorderLayout.CENTER);
         
+        refreshData();
+    }
+
+   
+    @Override
+    public void refreshData() {
         refreshUI();
     }
 
@@ -61,7 +66,6 @@ public class ITSupportPanel extends JPanel {
         mainContent.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // 1. TICKET HISTORY (TAKES FULL TOP WIDTH AND HEIGHT)
         JPanel tableCard = createStyledTile("Your Ticket History");
         tableCard.setLayout(new BorderLayout());
         JScrollPane tableScroll = new JScrollPane(table);
@@ -71,21 +75,19 @@ public class ITSupportPanel extends JPanel {
         tableCard.add(tableScroll, BorderLayout.CENTER);
 
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.gridwidth = 2; // Span across both bottom columns
-        gbc.weightx = 1.0; gbc.weighty = 0.7; // Takes 70% of vertical space
+        gbc.gridwidth = 2; 
+        gbc.weightx = 1.0; gbc.weighty = 0.7; 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(0, 0, 15, 0);
         mainContent.add(tableCard, gbc);
 
-        // 2. BOTTOM LEFT: SUBMIT FORM
         JPanel formCard = createTicketForm();
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.gridwidth = 1;
-        gbc.weightx = 0.35; gbc.weighty = 0.3; // Takes 30% of vertical space
+        gbc.weightx = 0.35; gbc.weighty = 0.3; 
         gbc.insets = new Insets(0, 0, 0, 10);
         mainContent.add(formCard, gbc);
 
-        // 3. BOTTOM RIGHT: TICKET DETAILS
         JPanel detailsCard = createDetailsPanel();
         gbc.gridx = 1; gbc.gridy = 1;
         gbc.weightx = 0.65;
@@ -106,7 +108,7 @@ public class ITSupportPanel extends JPanel {
         cbIssueType = new JComboBox<>(new String[]{"Forgot Password", "Account Locked", "Technical Support", "UI Error"});
         cbIssueType.setFont(bodyFont);
         
-        txtDescription = new JTextArea(3, 20); // Smaller row count for bottom placement
+        txtDescription = new JTextArea(3, 20); 
         txtDescription.setFont(bodyFont);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);

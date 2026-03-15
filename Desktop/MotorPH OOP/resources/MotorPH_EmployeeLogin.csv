@@ -64,3 +64,12 @@ Employee #,Username,First Name,Last Name,Password,Role
 10069,GGran,Graer,Gran,1234,REGULAR_STAFF
 10070,GLdfsdfsfd,Gres,Ldfsdfsfd,1234,REGULAR_STAFF
 10072,JVilla,Jerc,Villa,1234,HR_STAFF
+10073,AAsdasdasd,asdasd,asdasdasd,1234,ADMIN
+10074,SSdfsdfsdfsdf,sdfsdfsdf,sdfsdfsdfsdf,1234,ADMIN
+10075,AAsdadsadsads,asdasdasd,asdadsadsads,1234,ADMIN
+10076,ASarmiento,Abigail Ann,Sarmiento,1234,ACCOUNTING
+10077,AFesdfsdf,asdds,fesdfsdf,1234,HR_STAFF
+10078,JMananzala,John,Mananzala,1234,IT_STAFF
+10078,null,John,Mananzala,null,HR_STAFF
+10078,null,John,Mananzala,null,HR_STAFF
+10078,null,John,Mananzala,null,HR_STAFF

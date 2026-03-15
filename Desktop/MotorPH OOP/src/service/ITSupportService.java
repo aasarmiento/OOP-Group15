@@ -29,7 +29,6 @@ public class ITSupportService {
     }
 
     public void resolveTicket(String ticketId, Employee performer) {
-        // ABSTRACTION CHECK: Verify capability via the Model type
         boolean isAuthorized = false;
 
         if (performer instanceof ITStaff) {

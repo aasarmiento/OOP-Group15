@@ -9,7 +9,7 @@ import javax.swing.table.JTableHeader;
 import model.Employee;
 import service.EmployeeManagementService;
 
-public class TimePanel extends JPanel {
+public class TimePanel extends BasePanel {
     private DefaultTableModel model;
     private JComboBox<String> monthPicker, yearPicker;
     private JButton btnIn, btnOut;
@@ -17,22 +17,22 @@ public class TimePanel extends JPanel {
     private final EmployeeManagementService service;
     private final Employee currentUser;
 
-    private final Color MOTORPH_MAROON = new Color(128, 0, 0);
-    private final Color MOTORPH_GREEN = new Color(0, 102, 51);
-    private final Color BACKGROUND_COLOR = new Color(245, 245, 245);
-    private final Font titleFont = new Font("DM Sans Bold", Font.BOLD, 18);
-    private final Font bodyFont = new Font("DM Sans Regular", Font.PLAIN, 14);
-    private final Font headerFont = new Font("DM Sans Bold", Font.BOLD, 12);
+    private final Color MOTORPH_GREEN = new Color(40, 167, 69); 
 
     public TimePanel(EmployeeManagementService service, Employee user) {
+        super(); 
         this.service = service;
         this.currentUser = user;
         
-        setLayout(new BorderLayout());
-        setBackground(BACKGROUND_COLOR); 
         
         add(createTimeTrackingPanel(), BorderLayout.CENTER);
         
+        refreshData(); 
+    }
+
+   
+    @Override
+    public void refreshData() {
         refreshUI();
     }
 
@@ -43,13 +43,13 @@ public class TimePanel extends JPanel {
     private JPanel createTimeTrackingPanel() {
         JPanel mainWrapper = new JPanel(new BorderLayout(20, 20));
         mainWrapper.setOpaque(false);
-        mainWrapper.setBorder(new EmptyBorder(30, 30, 30, 30));
+        mainWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JPanel headerActions = new JPanel(new BorderLayout());
         headerActions.setOpaque(false);
 
         JLabel lblTitle = new JLabel("Attendance Logs");
-        lblTitle.setFont(titleFont);
+        lblTitle.setFont(new Font("DM Sans Bold", Font.BOLD, 20));
         lblTitle.setForeground(new Color(45, 45, 45));
 
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
@@ -63,7 +63,7 @@ public class TimePanel extends JPanel {
         btnOut = new JButton("Check Out");
         
         styleActionButton(btnIn, MOTORPH_GREEN); 
-        styleActionButton(btnOut, MOTORPH_MAROON); 
+        styleActionButton(btnOut, motorPHRed); // Using inherited motorPHRed
 
         controls.add(new JLabel("Month:"));
         controls.add(monthPicker);
@@ -82,19 +82,18 @@ public class TimePanel extends JPanel {
         model = new DefaultTableModel(new String[]{"Date", "Log In", "Log Out"}, 0);
         JTable table = new JTable(model);
         
-        // Table Styling
         table.setRowHeight(35);
-        table.setFont(bodyFont);
+        table.setFont(bodyFont); 
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(MOTORPH_MAROON);
+        table.setSelectionBackground(motorPHRed);
 
-        // Header Styling
         JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setFont(headerFont);
+        tableHeader.setFont(cardTitleFont); 
         tableHeader.setBackground(Color.WHITE);
         tableHeader.setForeground(Color.GRAY);
         tableHeader.setPreferredSize(new Dimension(0, 40));
+        
         ((DefaultTableCellRenderer)tableHeader.getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -103,7 +102,6 @@ public class TimePanel extends JPanel {
         
         tableContainer.add(scrollPane, BorderLayout.CENTER);
 
-        // --- LOGIC ---
         btnIn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this, "Proceed with Check In?", "MotorPH Attendance", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
@@ -130,61 +128,48 @@ public class TimePanel extends JPanel {
     }
 
     private void refreshUI() {
-    model.setRowCount(0);
-    String month = (String) monthPicker.getSelectedItem();
-    String year = (String) yearPicker.getSelectedItem();
-    
-    Object[][] data = service.getAttendanceLogs(currentUser.getEmpNo(), month, year);
-    if (data != null) {
-        for (Object[] row : data) {
-            model.addRow(row);
-        }
-    }
-
-    boolean[] states = service.getButtonStates(currentUser.getEmpNo());
-    btnIn.setEnabled(states[0]);
-    btnOut.setEnabled(states[1]);
-    
-    this.revalidate();
-    this.repaint();
-}
-
-    private JPanel createStyledTile() {
-        JPanel panel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-                g2.setColor(new Color(230, 230, 230));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-                g2.dispose();
+        if (monthPicker == null || yearPicker == null) return;
+        
+        model.setRowCount(0);
+        String month = (String) monthPicker.getSelectedItem();
+        String year = (String) yearPicker.getSelectedItem();
+        
+        Object[][] data = service.getAttendanceLogs(currentUser.getEmpNo(), month, year);
+        if (data != null) {
+            for (Object[] row : data) {
+                model.addRow(row);
             }
-        };
-        panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        return panel;
+        }
+
+        // Handle button states based on service logic
+        boolean[] states = service.getButtonStates(currentUser.getEmpNo());
+        if (states != null && states.length >= 2) {
+            btnIn.setEnabled(states[0]);
+            btnOut.setEnabled(states[1]);
+        }
+        
+        this.revalidate();
+        this.repaint();
     }
 
-  private void styleActionButton(JButton btn, Color bg) {
-    btn.setFont(headerFont);
-    btn.setForeground(Color.WHITE);
-    btn.setBackground(bg);
-    btn.setOpaque(true);
-    btn.setBorderPainted(false);
-    btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    btn.setFocusPainted(false);
-    
-    btn.setMargin(new Insets(8, 20, 8, 20));
+    private void styleActionButton(JButton btn, Color bg) {
+        btn.setFont(cardTitleFont); 
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(bg);
+        btn.setOpaque(true);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setFocusPainted(false);
+        
+        btn.setMargin(new Insets(8, 20, 8, 20));
 
-    btn.addMouseListener(new java.awt.event.MouseAdapter() {
-        public void mouseEntered(java.awt.event.MouseEvent evt) { 
-            if(btn.isEnabled()) btn.setBackground(bg.brighter()); 
-        }
-        public void mouseExited(java.awt.event.MouseEvent evt) { 
-            btn.setBackground(bg); 
-        }
-    });
-}
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) { 
+                if(btn.isEnabled()) btn.setBackground(bg.brighter()); 
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) { 
+                btn.setBackground(bg); 
+            }
+        });
+    }
 }

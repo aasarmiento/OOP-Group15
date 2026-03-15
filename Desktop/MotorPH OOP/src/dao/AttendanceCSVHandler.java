@@ -15,45 +15,36 @@ public class AttendanceCSVHandler implements AttendanceDAO {
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("H:mm");
 
-    @Override
-    public List<Attendance> getAttendanceByEmployee(int empNo) {
-        List<Attendance> list = new ArrayList<>();
-        
-        try (BufferedReader br = new BufferedReader(new FileReader(FILE_PATH))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                
-                String[] p = line.split(",");
-               
-                if (p.length < 6 || p[0].trim().startsWith("Employee")) continue;
+   @Override
+public List<Attendance> getAttendanceByEmployee(int empNo) {
+    List<Attendance> list = new ArrayList<>();
+    try (BufferedReader br = new BufferedReader(new FileReader(FILE_PATH))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (line.trim().isEmpty() || line.startsWith("Employee #")) continue;
+            
+            String[] p = line.split(",");
+            if (p.length < 6) continue;
 
-                try {
-                    
-                    int id = Integer.parseInt(p[0].replace("\uFEFF", "").trim());
-                    
-                    if (id == empNo) {
-                        
-                        LocalDate date = LocalDate.parse(p[3].trim(), fileDateFormat);
-                        
-                        
-                        LocalTime timeIn = parseTime(p[4].trim());
-                        LocalTime timeOut = parseTime(p[5].trim());
+            try {
+                // Remove potential BOM characters from index 0
+                int id = Integer.parseInt(p[0].replace("\uFEFF", "").trim());
+                if (id == empNo) {
+                    LocalDate date = LocalDate.parse(p[3].trim(), fileDateFormat);
+                    LocalTime timeIn = parseTime(p[4].trim());
+                    LocalTime timeOut = parseTime(p[5].trim());
 
-                        
-                        Attendance a = new Attendance(id, date, timeIn, timeOut);
-                        list.add(a);
-                    }
-                } catch (Exception e) {
-                    
-                    System.out.println("Skipping bad line: " + line + " Error: " + e.getMessage());
+                    list.add(new Attendance(id, date, timeIn, timeOut));
                 }
+            } catch (Exception e) {
+                System.out.println("Skipping bad line: " + line);
             }
-        } catch (IOException e) { 
-            e.printStackTrace(); 
         }
-        return list;
+    } catch (IOException e) { 
+        e.printStackTrace(); 
     }
+    return list;
+}
 
     
     private LocalTime parseTime(String timeStr) {

@@ -37,8 +37,10 @@ public class LoginPanel extends JFrame {
         add(createLeftPanel());
         add(createRightPanel());
         
-        empField.requestFocusInWindow();
-        setVisible(true);
+        // Finalize setup
+        if (empField != null) {
+            empField.requestFocusInWindow();
+        }
     }
 
     private JPanel createLeftPanel() {
@@ -54,7 +56,7 @@ public class LoginPanel extends JFrame {
                 ImageIcon icon = new ImageIcon(logoFile.getAbsolutePath());
                 Image scaled = icon.getImage().getScaledInstance(160, -1, Image.SCALE_SMOOTH);
                 gbc.gridy = 0;
-                gbc.insets = new Insets(0, 0, 25, 0); // Slightly more gap under logo
+                gbc.insets = new Insets(0, 0, 25, 0); 
                 leftPanel.add(new JLabel(new ImageIcon(scaled)), gbc);
             } else {
                 JLabel fallback = new JLabel("MotorPH");
@@ -63,7 +65,7 @@ public class LoginPanel extends JFrame {
                 leftPanel.add(fallback, gbc);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // Silently fail if logo not found
         }
 
         JLabel welcomeLabel = new JLabel("Welcome to MotorPH");
@@ -99,7 +101,7 @@ public class LoginPanel extends JFrame {
         subHeader.setForeground(Color.GRAY);
         subHeader.setFont(new Font("SansSerif", Font.PLAIN, 14));
         gbc.gridy = 1;
-        gbc.insets = new Insets(5, 60, 35, 60); // More space after subheader
+        gbc.insets = new Insets(5, 60, 35, 60); 
         rightPanel.add(subHeader, gbc);
 
         // Username
@@ -112,7 +114,7 @@ public class LoginPanel extends JFrame {
         empField = new JTextField();
         styleField(empField);
         gbc.gridy = 3;
-        gbc.insets = new Insets(0, 60, 20, 60); // More space after field
+        gbc.insets = new Insets(0, 60, 20, 60); 
         rightPanel.add(empField, gbc);
 
         // Password
@@ -146,7 +148,7 @@ public class LoginPanel extends JFrame {
         options.add(showPass, BorderLayout.WEST);
         options.add(forgotBtn, BorderLayout.EAST);
         gbc.gridy = 6;
-        gbc.insets = new Insets(0, 60, 30, 60); // Significant space before login button
+        gbc.insets = new Insets(0, 60, 30, 60); 
         rightPanel.add(options, gbc);
 
         JButton loginBtn = new JButton("Log In");
@@ -155,7 +157,7 @@ public class LoginPanel extends JFrame {
         loginBtn.setFont(new Font("SansSerif", Font.BOLD, 15));
         loginBtn.setOpaque(true);
         loginBtn.setBorderPainted(false);
-        loginBtn.setPreferredSize(new Dimension(0, 50)); // Slightly taller button
+        loginBtn.setPreferredSize(new Dimension(0, 50)); 
         loginBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginBtn.addActionListener(e -> handleLogin());
         gbc.gridy = 7;
@@ -167,7 +169,7 @@ public class LoginPanel extends JFrame {
     }
 
     private void styleField(JTextField field) {
-        field.setPreferredSize(new Dimension(0, 42)); // Taller fields
+        field.setPreferredSize(new Dimension(0, 42)); 
         field.setBackground(INPUT_BG);
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(210, 210, 210)),
@@ -193,6 +195,7 @@ public class LoginPanel extends JFrame {
 
     private void navigateToDashboard(Employee user) {
         this.dispose(); 
+        // Correctly passing the services to Dashboard
         new DashboardPanel(employeeService, attendanceDao, authService, user).setVisible(true);
     }
 

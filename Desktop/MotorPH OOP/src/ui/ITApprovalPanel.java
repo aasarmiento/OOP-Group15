@@ -7,44 +7,51 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import model.Employee;
-import model.ITStaff; // For Abstraction check
+import model.ITStaff; 
 import model.ITTicket;
 import service.ITSupportService;
 
-/**
- * UI LAYER: Handles display and user input.
- * No file loading or core business logic here.
- */
-public class ITApprovalPanel extends JPanel {
+
+public class ITApprovalPanel extends BasePanel {
     private final ITSupportService itService;
     private final Employee currentUser;
     private JTable table;
     private DefaultTableModel model;
     private JButton btnResolve;
 
-    // UI Styling Constants
-    private final Color primaryMaroon = new Color(128, 0, 0);
-    private final Color bgColor = new Color(245, 245, 245);
-    private final Color tileBg = new Color(248, 248, 248);
+    private final Color primaryMaroon = UIUtils.MOTORPH_MAROON;
+    private final Color bgColor = UIUtils.BG_LIGHT;
+    private final Color tileBg = Color.WHITE;
     private final Font titleFont = new Font("DM Sans Bold", Font.BOLD, 20);
-    private final Font cardTitleFont = new Font("DM Sans Bold", Font.BOLD, 12);
-    private final Font bodyFont = new Font("DM Sans Regular", Font.PLAIN, 13);
+    private final Font cardTitleFont = UIUtils.FONT_LABEL;
+    private final Font bodyFont = UIUtils.FONT_BODY;
 
     public ITApprovalPanel(ITSupportService service, Employee user) {
+        super(); 
         this.itService = service;
         this.currentUser = user;
         
-        setLayout(new BorderLayout(20, 20));
-        setBackground(bgColor);
         setBorder(new EmptyBorder(30, 40, 30, 40));
 
-        // UI Access Rule: Only IT Staff and Admins can see this panel
         String role = currentUser.getRole().name();
         if (!role.equalsIgnoreCase("IT_STAFF") && !role.equalsIgnoreCase("ADMIN")) {
             showAccessDenied();
             return; 
         }
 
+        initFullUI();
+        refreshData();
+    }
+
+    
+    @Override
+    public void refreshData() {
+        refreshUI();
+    }
+
+    private void initFullUI() {
+        setLayout(new BorderLayout(20, 20));
+        
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         JLabel lblTitle = new JLabel("IT Ticket Approval & Management");
@@ -64,9 +71,7 @@ public class ITApprovalPanel extends JPanel {
         };
         table = new JTable(model);
         
-        // --- ADDED SINGLE SELECTION MODE ---
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        // ------------------------------------
 
         styleTable();
 
@@ -86,18 +91,12 @@ public class ITApprovalPanel extends JPanel {
         mainCard.add(footerPanel, BorderLayout.SOUTH);
 
         add(mainCard, BorderLayout.CENTER);
-        refreshUI();
     }
-
-    /**
-     * UI Logic: Refreshes table data by calling Service.
-     * Implements Abstraction: Disables button if currentUser is not ITStaff.
-     */
+    
     public void refreshUI() {
         if (model == null) return;
         model.setRowCount(0);
         
-        // UI calling Service Layer
         List<ITTicket> tickets = itService.getAllTickets(); 
         for (ITTicket t : tickets) {
             model.addRow(new Object[]{
@@ -110,17 +109,15 @@ public class ITApprovalPanel extends JPanel {
             });
         }
         
-        // BUSINESS RULE (Partial Abstraction): 
-        // Admin can view, but ONLY an ITStaff instance can click Resolve.
+        // ADMIN View Rule: Only ITStaff instance can click Resolve
         if (!(currentUser instanceof ITStaff)) {
-            btnResolve.setEnabled(false);
-            btnResolve.setToolTipText("Access Restricted: Only IT Staff can resolve tickets.");
+            if (btnResolve != null) {
+                btnResolve.setEnabled(false);
+                btnResolve.setToolTipText("Access Restricted: Only IT Staff can resolve tickets.");
+            }
         }
     }
 
-    /**
-     * UI Action: Handles the button click and sends request to Service.
-     */
     private void handleResolve() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -142,12 +139,10 @@ public class ITApprovalPanel extends JPanel {
             
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // UI calling Service Layer (Protection Layer)
                 itService.resolveTicket(ticketId, currentUser); 
                 JOptionPane.showMessageDialog(this, "Ticket " + ticketId + " has been marked as Resolved.");
                 refreshUI();
             } catch (SecurityException ex) {
-                // Service Layer blocked the action based on business rules
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Access Denied", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -155,9 +150,8 @@ public class ITApprovalPanel extends JPanel {
         }
     }
 
-    // --- UI STYLING METHODS (NO LOGIC) ---
-
     private void showAccessDenied() {
+        removeAll();
         JPanel deniedPanel = new JPanel(new GridBagLayout());
         deniedPanel.setBackground(bgColor);
         JLabel lblMessage = new JLabel("ACCESS DENIED: IT AUTHORIZATION REQUIRED");
@@ -165,6 +159,8 @@ public class ITApprovalPanel extends JPanel {
         lblMessage.setForeground(primaryMaroon);
         deniedPanel.add(lblMessage);
         add(deniedPanel, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     private void styleTable() {

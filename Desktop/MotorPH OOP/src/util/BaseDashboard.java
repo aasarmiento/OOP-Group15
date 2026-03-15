@@ -1,9 +1,12 @@
 package util;
 
+import dao.AttendanceDAO;
 import dao.EmployeeDAO;
+import dao.UserLibrary;
 import java.awt.*;
 import javax.swing.*;
 import model.Employee;
+import service.EmployeeManagementService;
 import ui.LoginPanel;
 
 public abstract class BaseDashboard extends JFrame {
@@ -13,6 +16,12 @@ public abstract class BaseDashboard extends JFrame {
     
     protected final EmployeeDAO dao;
     protected final Employee user;
+    
+    // These need to be available for the logout logic to pass back to LoginPanel
+    protected EmployeeManagementService employeeService;
+    protected AttendanceDAO attendanceDao;
+    protected UserLibrary authService;
+
     protected JButton btnDatabase, btnAddEmployee, btnAttendance, btnProfile, btnLeave, btnFullDetails;
 
     public BaseDashboard(EmployeeDAO dao, Employee user) {
@@ -30,47 +39,44 @@ public abstract class BaseDashboard extends JFrame {
         
         add(navPanel, BorderLayout.WEST);
         add(cardPanel, BorderLayout.CENTER);
-        
     }
 
     private void initializeNavButtons() {
-    // 1. INITIALIZE EVERYTHING FIRST
-    btnDatabase = new JButton("Employee Database");
-    btnFullDetails = new JButton("View Full Details"); // <--- Ensure this line exists!
-    btnAddEmployee = new JButton("Add Employee");
-    btnAttendance = new JButton("Time");
-    btnProfile = new JButton("My Profile");
-    btnLeave = new JButton("Leave Application");
-    
-    // 2. NOW PUT THEM IN THE ARRAY
-    JButton[] allButtons = {
-        btnDatabase, 
-        btnFullDetails, // If this was null, the loop below crashed
-        btnAddEmployee, 
-        btnAttendance, 
-        btnProfile, 
-        btnLeave
-    };
-    
-    // 3. APPLY STYLES (This is where your crash happened)
-    for (JButton btn : allButtons) {
-        if (btn != null) { // Extra safety check
-            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btn.setMaximumSize(new Dimension(190, 40));
-            btn.setFocusable(false);
+        // 1. INITIALIZE EVERYTHING FIRST
+        btnDatabase = new JButton("Employee Database");
+        btnFullDetails = new JButton("View Full Details"); 
+        btnAddEmployee = new JButton("Add Employee");
+        btnAttendance = new JButton("Time");
+        btnProfile = new JButton("My Profile");
+        btnLeave = new JButton("Leave Application");
+        
+        // 2. NOW PUT THEM IN THE ARRAY
+        JButton[] allButtons = {
+            btnDatabase, 
+            btnFullDetails, 
+            btnAddEmployee, 
+            btnAttendance, 
+            btnProfile, 
+            btnLeave
+        };
+        
+        // 3. APPLY STYLES
+        for (JButton btn : allButtons) {
+            if (btn != null) { 
+                btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+                btn.setMaximumSize(new Dimension(190, 40));
+                btn.setFocusable(false);
+            }
         }
     }
-}
 
     private void setupNavigationPanel() {
         navPanel.setBackground(new Color(128, 0, 0)); // Dark Red
         navPanel.setPreferredSize(new Dimension(220, getHeight()));
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
 
-        
         navPanel.add(Box.createVerticalStrut(30));
         
-       
         JLabel welcomeLabel = new JLabel("Welcome to MOTORPH,");
         welcomeLabel.setForeground(Color.WHITE);
         welcomeLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -85,7 +91,6 @@ public abstract class BaseDashboard extends JFrame {
 
         navPanel.add(Box.createVerticalStrut(10));
 
-        
         JLabel adminTitle = new JLabel("Admin Dashboard");
         adminTitle.setForeground(Color.WHITE);
         adminTitle.setFont(new Font("Tahoma", Font.BOLD, 20));
@@ -94,18 +99,19 @@ public abstract class BaseDashboard extends JFrame {
 
         navPanel.add(Box.createVerticalStrut(40));
 
-      
         addRoleSpecificComponents();
 
-        
         navPanel.add(Box.createVerticalGlue());
+        
         JButton btnLogout = new JButton("Log out");
         btnLogout.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnLogout.setMaximumSize(new Dimension(190, 40));
         btnLogout.addActionListener(e -> {
-            new LoginPanel().setVisible(true); 
             dispose();
+            // FIX: Pass the required services back to the LoginPanel
+            new LoginPanel(employeeService, attendanceDao, authService).setVisible(true); 
         });
+        
         navPanel.add(btnLogout);
         navPanel.add(Box.createVerticalStrut(20));
     }
@@ -120,11 +126,10 @@ public abstract class BaseDashboard extends JFrame {
 
     protected abstract void addRoleSpecificComponents();
     
-   // Inside BaseDashboard.java
-public void render() {
-    addRoleSpecificComponents(); // Adds the role-based buttons
-    revalidate();
-    repaint();
-    setVisible(true); // Finally shows the window
-}
+    public void render() {
+        addRoleSpecificComponents(); 
+        revalidate();
+        repaint();
+        setVisible(true); 
+    }
 }
