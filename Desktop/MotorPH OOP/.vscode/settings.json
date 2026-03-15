@@ -1,7 +1,0 @@
-{
-    "git.ignoreLimitWarning": true,
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "/Users/abigail/Desktop/oop back upo /739 35/lib/opencsv-5.9.jar"
-    ]
-}
