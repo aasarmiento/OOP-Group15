@@ -213,14 +213,11 @@ public class DashboardPanel extends JFrame {
     }
 
    public void refreshDashboardData() {
-    // Re-fetch the employee from the database to get the latest Role/Details
     Employee updatedUser = employeeService.getEmployeeDao().findById(currentUser.getEmpNo());
     
-    // Update the dashboard's knowledge of the user
     this.personalInfoPanel = createHomePanel(); 
     loadPersonalDetails(updatedUser);
     
-    // Re-apply permissions in case the role changed
     applyRolePermissions(); 
     
     revalidate();

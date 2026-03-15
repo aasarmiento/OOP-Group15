@@ -4,7 +4,6 @@ import java.awt.*;
 import javax.swing.*;
 
 public class UIUtils {
-    // --- 1. BRAND IDENTITY (The Theme) ---
     public static final Color MOTORPH_MAROON = new Color(128, 0, 0);
     public static final Color MAROON = new Color(128, 0, 0); // From second version
     public static final Color SUCCESS_GREEN = new Color(0, 102, 51);
@@ -16,19 +15,16 @@ public class UIUtils {
     public static final Font BODY_FONT = new Font("DM Sans Regular", Font.PLAIN, 14); // From second version
     public static final Font BUTTON_FONT = new Font("DM Sans Bold", Font.BOLD, 12); // From second version
 
-    // --- 2. BUTTON FACTORY (Polymorphic Methods) ---
     
-    // Original Primary Button
+   
     public static JButton createPrimaryButton(String text) {
         return formatButton(new JButton(text), MOTORPH_MAROON);
     }
 
-    // Original Success Button
     public static JButton createSuccessButton(String text) {
         return formatButton(new JButton(text), SUCCESS_GREEN);
     }
 
-    // Original Nav Button logic
     public static JButton createNavButton(String text, Color foreground, Color background) {
         JButton button = new JButton(text);
         button.setForeground(foreground);
@@ -40,7 +36,6 @@ public class UIUtils {
         return button;
     }
 
-    // General Button logic
     public static JButton createButton(String text, Color bgColor, Color fgColor) {
         JButton button = new JButton(text);
         button.setBackground(bgColor);
@@ -49,21 +44,17 @@ public class UIUtils {
         return button;
     }
 
-    // Internal "engine" for button styling (Merged logic from both versions)
     private static JButton formatButton(JButton btn, Color bg) {
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
-        // Using BUTTON_FONT from the second version as it is more specific
         btn.setFont(BUTTON_FONT);
         btn.setFocusPainted(false);
         btn.setOpaque(true);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // Note: btn.setBorder(new util.RoundedBorder(10)); // Uncomment if util.RoundedBorder exists
         return btn;
     }
 
-    // --- 3. COMPONENT HELPERS ---
     public static JTextField createTextField(boolean editable) {
         JTextField textField = new JTextField();
         textField.setEditable(editable);
@@ -79,7 +70,6 @@ public class UIUtils {
         return label;
     }
 
-    // --- 4. PANEL BUILDERS (The Layouts) ---
     public static JPanel createTitledPanel(String title, LayoutManager layout) {
         JPanel panel = new JPanel(layout);
         panel.setBackground(Color.WHITE); 
@@ -127,7 +117,6 @@ public class UIUtils {
         return financialInfo;
     }
 
-    // Private helper for adding styled labels to panels
     private static void addLabel(JPanel panel, String text) {
         JLabel label = new JLabel(text);
         label.setFont(FONT_LABEL);

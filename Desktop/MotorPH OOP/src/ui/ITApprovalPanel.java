@@ -109,7 +109,6 @@ public class ITApprovalPanel extends BasePanel {
             });
         }
         
-        // ADMIN View Rule: Only ITStaff instance can click Resolve
         if (!(currentUser instanceof ITStaff)) {
             if (btnResolve != null) {
                 btnResolve.setEnabled(false);

@@ -195,7 +195,6 @@ public class LoginPanel extends JFrame {
 
     private void navigateToDashboard(Employee user) {
         this.dispose(); 
-        // Correctly passing the services to Dashboard
         new DashboardPanel(employeeService, attendanceDao, authService, user).setVisible(true);
     }
 

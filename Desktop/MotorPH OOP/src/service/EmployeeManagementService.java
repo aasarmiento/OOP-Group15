@@ -103,7 +103,6 @@ public class EmployeeManagementService {
         return registerEmployee((IAdminOperations)actor, newEmp);
     }
 
-    // FIXED: Now respects the role selected in the UI
     public boolean registerEmployee(model.IAdminOperations actor, model.Employee emp) {
         if (actor == null || emp == null) return false;
 
@@ -112,8 +111,7 @@ public class EmployeeManagementService {
             return false;
         }
 
-        // Only override the role if the current role is null. 
-        // If the UI already set a role, we keep it.
+        
         if (emp.getRole() == null) {
             Role assignedRole = mapPositionToRole(emp.getPosition());
             emp.setRole(assignedRole);
@@ -133,12 +131,10 @@ public class EmployeeManagementService {
             String fName = emp.getFirstName().trim();
             String lName = emp.getLastName().trim().replaceAll("\\s+", "");
             
-            // Generate username consistently: FirstLetter + LastNameFormatted
             String generatedUsername = fName.substring(0, 1).toUpperCase() + 
                                      lName.substring(0, 1).toUpperCase() + 
                                      lName.substring(1).toLowerCase();
             
-            // Pass the employee's current role to the login credentials
             return employeeDao.createLoginCredentials(
                 emp.getEmpNo(), 
                 generatedUsername, 
@@ -152,37 +148,29 @@ public class EmployeeManagementService {
    
 public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
     try {
-        // 1. Security check - Keep your original logic
         if (!(actor instanceof model.IAdminOperations)) { 
             showError("Access Denied."); 
             return false; 
         }
         
-        // 2. Handle Birthday Parsing - Keep your original logic
         String bdayText = fields[4].getText().trim();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
         LocalDate birthday = bdayText.contains("-") ? LocalDate.parse(bdayText) : LocalDate.parse(bdayText, formatter);
 
         String position = fields[12].getText().trim();
         
-        // --- MAPPING LOGIC START ---
-        // Retrieve the role string from the UI field (index 20)
         String roleNameFromForm = fields[20].getText().trim(); 
         Role assignedRole;
         
         try {
-            // Check if it's the Enum name (e.g., "IT_STAFF")
             assignedRole = Role.valueOf(roleNameFromForm);
         } catch (IllegalArgumentException e) {
-            // Fallback: Map from the Label (e.g., "IT Staff") using your helper
             assignedRole = Role.fromLabel(roleNameFromForm);
         }
-        // --- MAPPING LOGIC END ---
+     
 
-        // 3. Create the correct instance (Admin, HRStaff, etc.)
         Employee emp = createEmployeeInstance(assignedRole.name());
 
-        // 4. Map the standard fields - Keep your original logic
         emp.setEmpNo(Integer.parseInt(fields[0].getText().trim()));
         emp.setLastName(fields[1].getText().trim());
         emp.setFirstName(fields[2].getText().trim());
@@ -198,7 +186,6 @@ public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
         emp.setPosition(position);
         emp.setSupervisor(fields[13].getText().trim());
         
-        // 5. Hard-set the role and calculate rates - Keep your original logic
         emp.setRole(assignedRole);
 
         double basic = parseDouble(fields[14].getText());
@@ -210,11 +197,9 @@ public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
         emp.setGrossRate(emp.getBasicSalary() + emp.getRiceSubsidy() + emp.getPhoneAllowance() + emp.getClothingAllowance());
         emp.setHourlyRate(basic / 21 / 8); 
 
-        // 6. Persist to CSV
         boolean success = employeeDao.update(emp);
         
         if (success) {
-            // CRITICAL SYNC: Update the login credentials CSV so the login system matches the new data
             employeeDao.createLoginCredentials(emp.getEmpNo(), null, null, assignedRole.name());
         }
         

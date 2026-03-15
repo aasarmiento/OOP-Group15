@@ -196,7 +196,7 @@ public void setAccountStatus(String accountStatus) {
     public double calculateGrossSalary() {
         return (this.hourlyRate * 160) + riceSubsidy + phoneAllowance + clothingAllowance;
     }
-
+    
     @Override
     public double calculateNetPay() {
         return calculateGrossSalary() - computeDeductions();

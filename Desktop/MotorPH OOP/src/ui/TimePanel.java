@@ -141,7 +141,6 @@ public class TimePanel extends BasePanel {
             }
         }
 
-        // Handle button states based on service logic
         boolean[] states = service.getButtonStates(currentUser.getEmpNo());
         if (states != null && states.length >= 2) {
             btnIn.setEnabled(states[0]);

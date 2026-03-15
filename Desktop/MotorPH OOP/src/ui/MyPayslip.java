@@ -38,13 +38,12 @@ public class MyPayslip extends BasePanel {
     private JPanel paper; 
 
     public MyPayslip(EmployeeManagementService service, PayrollCalculator calc, PayrollService payrollService, Employee user) {
-        super(); // Initializes BasePanel background and layout
+        super(); 
         this.service = service;
         this.calc = calc;
         this.payrollService = payrollService;
         this.currentUser = user;
 
-        // BasePanel already sets Layout to BorderLayout and Background to BG_LIGHT
 
         add(createPayslipHeader(), BorderLayout.NORTH);
         paper = createPayslipContent();

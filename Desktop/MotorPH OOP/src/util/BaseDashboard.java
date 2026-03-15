@@ -17,7 +17,6 @@ public abstract class BaseDashboard extends JFrame {
     protected final EmployeeDAO dao;
     protected final Employee user;
     
-    // These need to be available for the logout logic to pass back to LoginPanel
     protected EmployeeManagementService employeeService;
     protected AttendanceDAO attendanceDao;
     protected UserLibrary authService;

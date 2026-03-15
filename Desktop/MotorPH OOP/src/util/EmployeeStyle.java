@@ -15,7 +15,7 @@ import ui.UIUtils;
 
 public class EmployeeStyle extends JFrame {
 
-    // Added 'final' to satisfy the IDE warnings and kept the same variable names
+   
     private final CSVHandler csvHandler = new CSVHandler();
     
     private final JTextField txtEmpNo = UIUtils.createTextField(false); 
@@ -56,14 +56,13 @@ public class EmployeeStyle extends JFrame {
             String ln = txtLastName.getText();
             String fn = txtFirstName.getText();
 
-            // Match the constructor requirement: (int, String, String, LocalDate, double)
+            
             java.time.LocalDate placeholderDate = java.time.LocalDate.now();
             double placeholderSalary = 0.0;
 
             Employee emp = new RegularStaff(id, ln, fn, placeholderDate, placeholderSalary);
             
-            // FIX: Changed .addRow(emp) to .create(emp) 
-            // This matches the method in your CSVHandler.java
+            
             csvHandler.create(emp); 
             
             JOptionPane.showMessageDialog(this, "Employee Saved Successfully!");

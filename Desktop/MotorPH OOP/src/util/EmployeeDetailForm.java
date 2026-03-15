@@ -149,7 +149,7 @@ public class EmployeeDetailForm extends JFrame {
                 mainPanel.add(comboSupervisor, gbc);
             }
             else if (i == 20) { 
-                // FIX: Map internal Enum name (IT_STAFF) to UI label (IT Staff)
+               
                 try {
                     Role r = Role.valueOf(value);
                     comboRole.setSelectedItem(r.getLabel());
