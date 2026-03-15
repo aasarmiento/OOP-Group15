@@ -3,7 +3,7 @@ Employee #,Username,First Name,Last Name,Password,Role
 10002,ALim,Antonio,Lim,1234,ADMIN
 10003,BAquino,Bianca Sofia,Aquino,1234,ADMIN
 10004,IReyes,Isabella,Reyes,1234,ADMIN
-10005,EHernandez,Eduard,Hernandez,1234,IT_STAFF
+10005,EHernandez,Eduard,Hernandez,123456,IT_STAFF
 10006,AVillanueva,Andrea Mae,Villanueva,1234,HR_STAFF
 10007,BSanjose,Brad,San Jose,1234,HR_STAFF
 10008,ARomualdez,Alice,Romualdez,1234,HR_STAFF
@@ -32,7 +32,7 @@ Employee #,Username,First Name,Last Name,Password,Role
 10031,DAguilar,Delia,Aguilar,1234,REGULAR_STAFF
 10032,JCastro,John Rafael,Castro,1234,REGULAR_STAFF
 10033,CMartinez,Carlos Ian,Martinez,1234,REGULAR_STAFF
-10034,BSantos,Beatriz,Santos,1234,REGULAR_STAFF
+10034,BSantos,Beatriz,Santos,123456,REGULAR_STAFF
 10035,AAsdasdadsads,asdads,asdasdadsads,1234,REGULAR_STAFF
 10036,AAsdasd,Abigai,asdasd,1234,REGULAR_STAFF
 10037,ADelacruz,asdasd,Delacruz,1234,REGULAR_STAFF
@@ -60,7 +60,7 @@ Employee #,Username,First Name,Last Name,Password,Role
 10062,ADsasdasdasdsdads,adsas,dsasdasdasdsdads,1234,REGULAR_STAFF
 10065,DRsersdfdsfdsf,dfdssdf,rsersdfdsfdsf,1234,REGULAR_STAFF
 10067,AAsdasassda,asdsadsda,asdasassda,1234,REGULAR_STAFF
-10068,ASarmiento,abi,sarmiento,1234,REGULAR_STAFF
+10068,asarmiento,abi,sarmiento,1234,REGULAR_STAFF
 10069,GGran,Graer,Gran,1234,REGULAR_STAFF
 10070,GLdfsdfsfd,Gres,Ldfsdfsfd,1234,REGULAR_STAFF
 10072,JVilla,Jerc,Villa,1234,HR_STAFF
@@ -69,7 +69,15 @@ Employee #,Username,First Name,Last Name,Password,Role
 10075,AAsdadsadsads,asdasdasd,asdadsadsads,1234,ADMIN
 10076,ASarmiento,Abigail Ann,Sarmiento,1234,ACCOUNTING
 10077,AFesdfsdf,asdds,fesdfsdf,1234,HR_STAFF
-10078,JMananzala,John,Mananzala,1234,IT_STAFF
-10078,null,John,Mananzala,null,HR_STAFF
-10078,null,John,Mananzala,null,HR_STAFF
-10078,null,John,Mananzala,null,HR_STAFF
+10078,JMananzala,John,Mananzala,null,HR_STAFF
+10079,DQeqweqeqeq,dsadasd,qeqweqeqeq,1234,REGULAR_STAFF
+10080,DAsdasdasd,dasdasda,asdasdasd,1234,REGULAR_STAFF
+10081,LMessi,Leonel,Messi,1234,REGULAR_STAFF
+10082,ADasdada,asdadada,dasdada,1234,REGULAR_STAFF
+10083,FSdfsfsf,fsdsfsf,sdfsfsf,1234,REGULAR_STAFF
+10084,LMessi,Leo,Messi,1234,REGULAR_STAFF
+10085,DQdasdad,dadad,qdasdad,1234,REGULAR_STAFF
+10086,WAsdadada,wdadasd,asdadada,1234,REGULAR_STAFF
+10087,NL,Nadine,L,1234,IT_STAFF
+10088,TTester,Test,Tester,1234,REGULAR_STAFF
+10089,TPerson,Test,Person,1234,REGULAR_STAFF

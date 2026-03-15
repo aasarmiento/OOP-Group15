@@ -297,7 +297,9 @@ public boolean updateEmployeeFromForm(Employee actor, JTextField[] fields) {
         return states;
     }
 
-    public EmployeeDAO getEmployeeDao() { return this.employeeDao; }
+    public EmployeeDAO getEmployeeDao() {
+        return employeeDao;
+    }
 
     public int generateNextEmployeeId() { return employeeDao.getNextAvailableId(); }
 

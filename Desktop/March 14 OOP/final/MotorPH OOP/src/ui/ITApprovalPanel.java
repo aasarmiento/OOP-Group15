@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import model.Employee;
 import model.ITStaff; 
 import model.ITTicket;
+import model.Role;
 import service.ITSupportService;
 
 
@@ -18,6 +19,7 @@ public class ITApprovalPanel extends BasePanel {
     private JTable table;
     private DefaultTableModel model;
     private JButton btnResolve;
+    private JButton btnGenerateTempPassword;
 
     private final Color primaryMaroon = UIUtils.MOTORPH_MAROON;
     private final Color bgColor = UIUtils.BG_LIGHT;
@@ -73,6 +75,23 @@ public class ITApprovalPanel extends BasePanel {
         
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+                String issueType = table.getValueAt(table.getSelectedRow(), 3).toString();
+                String status = table.getValueAt(table.getSelectedRow(), 4).toString();
+
+                boolean isForgotPassword = "Forgot Password".equalsIgnoreCase(issueType);
+                boolean isResolved = "RESOLVED".equalsIgnoreCase(status);
+
+                boolean canResolve = (currentUser instanceof ITStaff)
+                        || currentUser.getRole() == Role.ADMIN;
+
+                btnGenerateTempPassword.setEnabled(canResolve && isForgotPassword && !isResolved);
+                btnResolve.setEnabled(canResolve && !isForgotPassword && !isResolved);
+            }
+        });
+
+        
         styleTable();
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -82,14 +101,19 @@ public class ITApprovalPanel extends BasePanel {
 
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setOpaque(false);
-        
+
+        btnGenerateTempPassword = new StyledButton("Generate Temp Password", new Color(102, 51, 153));
+        btnGenerateTempPassword.setPreferredSize(new Dimension(220, 40));
+        btnGenerateTempPassword.addActionListener(e -> handleGenerateTempPassword());
+
         btnResolve = new StyledButton("Mark as Resolved", new Color(0, 102, 51));
         btnResolve.setPreferredSize(new Dimension(180, 40));
         btnResolve.addActionListener(e -> handleResolve());
-        
-        footerPanel.add(btnResolve);
-        mainCard.add(footerPanel, BorderLayout.SOUTH);
 
+        footerPanel.add(btnGenerateTempPassword);
+        footerPanel.add(btnResolve);
+
+        mainCard.add(footerPanel, BorderLayout.SOUTH);
         add(mainCard, BorderLayout.CENTER);
     }
     
@@ -108,13 +132,27 @@ public class ITApprovalPanel extends BasePanel {
                 t.getCreatedAt()
             });
         }
-        
-        if (!(currentUser instanceof ITStaff)) {
+                
+        boolean canResolve = (currentUser instanceof ITStaff)
+        || currentUser.getRole() == Role.ADMIN;
+
             if (btnResolve != null) {
                 btnResolve.setEnabled(false);
-                btnResolve.setToolTipText("Access Restricted: Only IT Staff can resolve tickets.");
+                if (!canResolve) {
+                    btnResolve.setToolTipText("Access Restricted: Only IT Staff or Admin can resolve tickets.");
+                } else {
+                    btnResolve.setToolTipText(null);
+                }
             }
-        }
+
+            if (btnGenerateTempPassword != null) {
+                btnGenerateTempPassword.setEnabled(false);
+                if (!canResolve) {
+                    btnGenerateTempPassword.setToolTipText("Access Restricted: Only IT Staff or Admin can generate temporary passwords.");
+                } else {
+                    btnGenerateTempPassword.setToolTipText(null);
+                }
+            }
     }
 
     private void handleResolve() {
@@ -123,29 +161,40 @@ public class ITApprovalPanel extends BasePanel {
             JOptionPane.showMessageDialog(this, "Select a ticket to resolve.");
             return;
         }
-        
+
         String ticketId = table.getValueAt(row, 0).toString();
+        String issueType = table.getValueAt(row, 3).toString();
         String status = table.getValueAt(row, 4).toString();
 
-        if (status.equalsIgnoreCase("RESOLVED")) {
+        if ("Forgot Password".equalsIgnoreCase(issueType)) {
+            JOptionPane.showMessageDialog(this, "Use the Generate Temp Password button for forgot password tickets.");
+            return;
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(status)) {
             JOptionPane.showMessageDialog(this, "This ticket is already resolved.");
             return;
         }
-        
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to resolve Ticket #" + ticketId + "?", 
-            "Confirm Resolution", JOptionPane.YES_NO_OPTION);
-            
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                itService.resolveTicket(ticketId, currentUser); 
-                JOptionPane.showMessageDialog(this, "Ticket " + ticketId + " has been marked as Resolved.");
-                refreshUI();
-            } catch (SecurityException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Access Denied", JOptionPane.ERROR_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        try {
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to resolve Ticket #" + ticketId + "?",
+                "Confirm Resolution",
+                JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
             }
+
+            itService.resolveTicket(ticketId, currentUser);
+            JOptionPane.showMessageDialog(this, "Ticket " + ticketId + " has been marked as Resolved.");
+            refreshUI();
+        } catch (SecurityException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Access Denied", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -248,6 +297,47 @@ public class ITApprovalPanel extends BasePanel {
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
             super.paintComponent(g);
             g2.dispose();
+        }
+    }
+
+
+    private void handleGenerateTempPassword() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Select a forgot password ticket first.");
+            return;
+        }
+
+        String ticketId = table.getValueAt(row, 0).toString();
+        String issueType = table.getValueAt(row, 3).toString();
+        String status = table.getValueAt(row, 4).toString();
+
+        if (!"Forgot Password".equalsIgnoreCase(issueType)) {
+            JOptionPane.showMessageDialog(this, "Selected ticket is not a forgot password request.");
+            return;
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(status)) {
+            JOptionPane.showMessageDialog(this, "This ticket is already resolved.");
+            return;
+        }
+
+        try {
+            String tempPassword = itService.generateTemporaryPasswordAndResolve(ticketId, currentUser);
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Temporary password generated:\n" + tempPassword +
+                "\n\nPlease email this temporary password to the user.",
+                "Temporary Password Generated",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
+            refreshUI();
+        } catch (SecurityException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Access Denied", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

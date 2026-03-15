@@ -13,8 +13,8 @@ public class CSVHandler implements EmployeeDAO {
     private final Map<Integer, Employee> employeeCache = new HashMap<>();
     private final Map<String, Employee> usernameCache = new HashMap<>();
     
-    private static final String EMPLOYEE_DATA_CSV = "resources/MotorPH_EmployeeData.csv";
-    private static final String LOGIN_DATA_CSV = "resources/MotorPH_EmployeeLogin.csv";
+    private static final String EMPLOYEE_DATA_CSV = "./resources/MotorPH_EmployeeData.csv";
+    private static final String LOGIN_DATA_CSV = "./resources/MotorPH_EmployeeLogin.csv";
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy");
 
@@ -223,9 +223,7 @@ private boolean saveLoginsToCSV() {
             String password = (e.getPassword() != null) ? e.getPassword() : "1234";
             String roleStr = (e.getRole() != null) ? e.getRole().name() : "REGULAR_STAFF";
             
-            String username = e.getFirstName().substring(0, 1).toUpperCase() + 
-                              e.getLastName().substring(0, 1).toUpperCase() + 
-                              e.getLastName().substring(1).toLowerCase().replaceAll("\\s+", "");
+            String username = getSavedUsername(e);
 
             writer.printf("%d,%s,%s,%s,%s,%s%n",
                 e.getEmpNo(),
@@ -284,8 +282,22 @@ private boolean saveLoginsToCSV() {
     @Override public Object[][] getLeaveStatusByEmpId(int empId) { return new Object[0][0]; }
     @Override public Object[][] getAllLeaveRequests() { return new Object[0][0]; }
     @Override public void updateLeaveStatus(String reqId, String stat) {}
-    @Override public void updateEmployeeStatus(int id, String stat) { update(findById(id)); }
-    @Override public void saveNewPassword(int id, String pass) {}
+    @Override
+    public void updateEmployeeStatus(int id, String stat) {
+        Employee emp = findById(id);
+        if (emp != null) {
+            emp.setStatus(stat);
+            saveAllToCSV();
+        }
+    }
+    @Override
+    public void saveNewPassword(int id, String pass) {
+        Employee emp = findById(id);
+        if (emp != null) {
+            emp.setPassword(pass);
+            saveLoginsToCSV();
+        }
+    }
     @Override public List<LeaveRequest> getAllLeaveRequestsList() { return new ArrayList<>(); }
 
     @Override
@@ -412,4 +424,44 @@ public boolean createLoginCredentials(int empId, String username, String passwor
         return false;
     }
 }
+
+    private String getSavedUsername(Employee e) {
+        for (Map.Entry<String, Employee> entry : usernameCache.entrySet()) {
+            Employee value = entry.getValue();
+            if (value != null && value.getEmpNo() == e.getEmpNo()) {
+                return entry.getKey();
+            }
+        }
+        return e.getUsername();
+    }
+
+
+    @Override
+    public void saveNewPassword(int id, String pass) {
+        Employee emp = findById(id);
+        if (emp != null) {
+            emp.setPassword(pass);
+            saveLoginsToCSV();
+        }
+    }
+
+    @Override
+    public void updateEmployeeStatus(int id, String stat) {
+        Employee emp = findById(id);
+        if (emp != null) {
+            emp.setStatus(stat);
+            saveAllToCSV();
+        }
+    }
+
+    private String getSavedUsername(Employee e) {
+        for (Map.Entry<String, Employee> entry : usernameCache.entrySet()) {
+            Employee value = entry.getValue();
+            if (value != null && value.getEmpNo() == e.getEmpNo()) {
+                return entry.getKey();
+            }
+        }
+        return e.getUsername();
+    }
+
 }

@@ -1,17 +1,21 @@
 package ui;
 
 import dao.AttendanceDAO;
+import dao.ITTicketDAOImpl;
 import dao.UserLibrary;
 import java.awt.*;
 import javax.swing.*;
 import model.Employee;
 import service.EmployeeManagementService;
+import service.ITSupportService;
 
 public class LoginPanel extends JFrame {
 
     private final EmployeeManagementService employeeService; 
     private final AttendanceDAO attendanceDao; 
     private final UserLibrary authService;
+    private final ITSupportService itSupportService;
+
 
     private JTextField empField;
     private JPasswordField passField;
@@ -20,12 +24,23 @@ public class LoginPanel extends JFrame {
     private final Color BRAND_MAROON = new Color(88, 16, 16);
     private final Color INPUT_BG = new Color(248, 249, 250);
 
-    public LoginPanel(EmployeeManagementService service, AttendanceDAO dao, UserLibrary auth) {
-        this.employeeService = service;
-        this.attendanceDao = dao;
-        this.authService = auth;
-        initializeUI();
-    }
+
+public LoginPanel(EmployeeManagementService service, AttendanceDAO dao, UserLibrary auth, ITSupportService itSupportService) {
+    this.employeeService = service;
+    this.attendanceDao = dao;
+    this.authService = auth;
+    this.itSupportService = itSupportService;
+    initializeUI();
+}
+
+public LoginPanel(EmployeeManagementService service, AttendanceDAO dao, UserLibrary auth) {
+    this(
+        service,
+        dao,
+        auth,
+        new ITSupportService(new ITTicketDAOImpl(), service.getEmployeeDao())
+    );
+}
 
     private void initializeUI() {
         setTitle("MotorPH Login");
@@ -143,7 +158,7 @@ public class LoginPanel extends JFrame {
         forgotBtn.setBorderPainted(false);
         forgotBtn.setContentAreaFilled(false);
         forgotBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        forgotBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Contact IT Support."));
+        forgotBtn.addActionListener(e -> handleForgotPassword());
         
         options.add(showPass, BorderLayout.WEST);
         options.add(forgotBtn, BorderLayout.EAST);
@@ -183,7 +198,15 @@ public class LoginPanel extends JFrame {
 
         if (authService.authenticate(username, password)) {
             Employee user = authService.getLoggedInEmployee();
+
             if (user != null) {
+                if ("PASSWORD_RESET_REQUIRED".equalsIgnoreCase(user.getStatus())) {
+                    boolean changed = promptForNewPassword(user);
+                    if (!changed) {
+                        return;
+                    }
+                }
+
                 navigateToDashboard(user);
             } else {
                 handleFailedAttempt();
@@ -205,5 +228,85 @@ public class LoginPanel extends JFrame {
             System.exit(0);
         }
         JOptionPane.showMessageDialog(this, "Invalid credentials. Attempts left: " + (3 - loginAttempts));
+    }
+
+    private void handleForgotPassword() {
+        String username = empField.getText().trim();
+
+        if (username.isEmpty()) {
+            username = JOptionPane.showInputDialog(this, "Enter your username:");
+        }
+
+        if (username == null || username.trim().isEmpty()) {
+            return;
+        }
+
+        boolean created = itSupportService.submitForgotPasswordTicket(username.trim());
+
+        if (created) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Your request has been submitted.\nIT will email you a temporary password once processed.",
+                "Forgot Password Request Submitted",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                this,
+                "We could not create the request.\nCheck the username or see if an open forgot-password ticket already exists.",
+                "Request Not Submitted",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
+
+
+
+    private boolean promptForNewPassword(Employee user) {
+    while (true) {
+        JPasswordField newPassField = new JPasswordField();
+        JPasswordField confirmField = new JPasswordField();
+
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.add(new JLabel("Enter a new password (minimum 6 characters):"));
+        panel.add(newPassField);
+        panel.add(new JLabel("Confirm new password:"));
+        panel.add(confirmField);
+
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            panel,
+            "Set New Password",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+            if (result != JOptionPane.OK_OPTION) {
+                JOptionPane.showMessageDialog(this, "You must set a new password before continuing.");
+                return false;
+            }
+
+            String newPass = new String(newPassField.getPassword()).trim();
+            String confirm = new String(confirmField.getPassword()).trim();
+
+            if (newPass.length() < 6) {
+                JOptionPane.showMessageDialog(this, "Password must be at least 6 characters.");
+                continue;
+            }
+
+            if (!newPass.equals(confirm)) {
+                JOptionPane.showMessageDialog(this, "Passwords do not match.");
+                continue;
+            }
+
+            employeeService.getEmployeeDao().saveNewPassword(user.getEmpNo(), newPass);
+            employeeService.getEmployeeDao().updateEmployeeStatus(user.getEmpNo(), "Active");
+
+            user.setPassword(newPass);
+            user.setStatus("Active");
+
+            JOptionPane.showMessageDialog(this, "Password updated successfully.");
+            return true;
+        }
     }
 }

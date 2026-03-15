@@ -200,7 +200,7 @@ public class EmployeeDatabase extends BasePanel {
         formScrollContainer.setLayout(new BoxLayout(formScrollContainer, BoxLayout.Y_AXIS));
         formScrollContainer.setOpaque(false);
 
-        JTextField basicSalaryInput = createStyledTextField("0.00"); applyFilters(13, basicSalaryInput);
+        JTextField basicSalaryInput = createStyledTextField("0"); applyFilters(13, basicSalaryInput);
         JTextField rice = createStyledTextField("0"); applyFilters(14, rice);
         JTextField pallow = createStyledTextField("0"); applyFilters(15, pallow);
         JTextField cloth = createStyledTextField("0"); applyFilters(16, cloth);
@@ -222,7 +222,7 @@ public class EmployeeDatabase extends BasePanel {
 
         JTextField address = createStyledTextField("Address line...");
         JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Male", "Female"});
-        JTextField phone = createStyledTextField("000-000-000"); applyFilters(5, phone);
+        JTextField phone = createStyledTextField("0917-123-4567"); applyFilters(5, phone);
 
         String ast = " <font color='" + REQ_HEX + "'>*</font>";
         addFormField(personalPanel, "<html>First Name" + ast + "</html>", fName);
@@ -261,19 +261,21 @@ public class EmployeeDatabase extends BasePanel {
         roleCombo.setSelectedItem(model.Role.REGULAR_STAFF.getLabel());
         
         posCombo.addActionListener(e -> {
-            String selectedPos = (String)posCombo.getSelectedItem();
-            String[] available = employeeManagementService.getSupervisorsForPosition(selectedPos);
-            supervCombo.removeAllItems();
-            for (String s : available) supervCombo.addItem(s);
-
-            double[] allowances = employeeManagementService.getStandardAllowances(selectedPos);
-            rice.setText(String.format("%.0f", allowances[0]));
-            pallow.setText(String.format("%.0f", allowances[1]));
-            cloth.setText(String.format("%.0f", allowances[2]));
-            rice.setForeground(Color.BLACK); pallow.setForeground(Color.BLACK); cloth.setForeground(Color.BLACK);
+            updatePositionDefaults(posCombo, status, supervCombo, rice, pallow, cloth);
+            updateRoleOptionsForPosition(posCombo, roleCombo);
         });
 
-        if (posCombo.getItemCount() > 0) posCombo.setSelectedIndex(0);
+        status.addActionListener(e -> 
+            updatePositionDefaults(posCombo, status, supervCombo, rice, pallow, cloth)
+        );
+
+        if (posCombo.getItemCount() > 0) {
+            posCombo.setSelectedIndex(0);
+            updatePositionDefaults(posCombo, status, supervCombo, rice, pallow, cloth);
+            updateRoleOptionsForPosition(posCombo, roleCombo);
+        }
+
+        
         addFormField(jobPanel, "Position:", posCombo);
         addFormField(jobPanel, "Supervisor:", supervCombo);
         addFormField(jobPanel, "Access Role:", roleCombo); 
@@ -302,7 +304,11 @@ public class EmployeeDatabase extends BasePanel {
         styleButton(btnSave, new Color(0, 102, 51));
         
         btnBack.addActionListener(e -> {
-            clearFormFields(fName, lName, bday, address, phone, sss, phil, tin, pagibig, basicSalaryInput, rice, pallow, cloth);
+            clearFormFields(
+                fName, lName, bday, address, phone, sss, phil, tin, pagibig,
+                basicSalaryInput, rice, pallow, cloth,
+                genderCombo, status, posCombo, supervCombo, roleCombo
+            );
             masterlistLayout.show(masterlistContainer, "TABLE");
         });
 
@@ -310,27 +316,32 @@ public class EmployeeDatabase extends BasePanel {
             String salaryStr = basicSalaryInput.getText().replaceAll("[^\\d.]", "");
             double salaryVal = salaryStr.isEmpty() ? 0 : Double.parseDouble(salaryStr);
 
-            boolean isMissingRequired = fName.getText().trim().isEmpty() || fName.getText().equals("Juan") ||
-                                        lName.getText().trim().isEmpty() || lName.getText().equals("Delacruz") ||
-                                        bday.getText().equals("MM/dd/yyyy") ||
-                                        address.getText().trim().isEmpty() || address.getText().equals("Address line...") ||
-                                        phone.getText().trim().isEmpty() || phone.getText().equals("000-000-000");
+            String validationMessage = validateRegistrationFields(
+                fName,
+                lName,
+                bday,
+                address,
+                phone,
+                sss,
+                phil,
+                tin,
+                pagibig,
+                salaryVal
+            );
 
-            boolean isMissingGov = sss.getText().equals("00-0000000-0") ||
-                                   phil.getText().equals("000000000000") ||
-                                   tin.getText().equals("000-000-000-000") ||
-                                   pagibig.getText().equals("000000000000");
-
-            if (isMissingRequired || isMissingGov || salaryVal <= 0) {
-                JOptionPane.showMessageDialog(this, 
-                    "Registration Failed:\n- All required fields (*) must be filled.\n\n", 
-                    "Validation Error", JOptionPane.WARNING_MESSAGE);
+            if (validationMessage != null) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    validationMessage,
+                    "Validation Error",
+                    JOptionPane.WARNING_MESSAGE
+                );
                 return;
             }
 
             String selectedRoleLabel = (String) roleCombo.getSelectedItem();
             Employee newEmp = employeeManagementService.createEmployeeInstance(selectedRoleLabel);
-            
+
             newEmp.setFirstName(fName.getText().trim());
             newEmp.setLastName(lName.getText().trim());
             newEmp.setGender(genderCombo.getSelectedItem().toString());
@@ -346,121 +357,324 @@ public class EmployeeDatabase extends BasePanel {
             newEmp.setRole(model.Role.fromString(selectedRoleLabel));
 
             try {
-                newEmp.setBirthday(java.time.LocalDate.parse(bday.getText().trim(), java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+                newEmp.setBirthday(java.time.LocalDate.parse(
+                    bday.getText().trim(),
+                    java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                ));
                 newEmp.setBasicSalary(salaryVal);
                 newEmp.setRiceSubsidy(Double.parseDouble(rice.getText().replaceAll("[^\\d.]", "")));
                 newEmp.setPhoneAllowance(Double.parseDouble(pallow.getText().replaceAll("[^\\d.]", "")));
                 newEmp.setClothingAllowance(Double.parseDouble(cloth.getText().replaceAll("[^\\d.]", "")));
-                
-                if (employeeManagementService.registerEmployee((IAdminOperations)currentUser, newEmp)) {
-                    String userGen = newEmp.getFirstName().substring(0, 1).toUpperCase() + 
-                                   newEmp.getLastName().substring(0, 1).toUpperCase() + 
-                                   newEmp.getLastName().substring(1).toLowerCase().replaceAll("\\s+", "");
 
-                    JOptionPane.showMessageDialog(this, 
-                        "Registration Successful!\nID: " + newEmp.getEmpNo() + 
-                        "\nUsername: " + userGen + "\nPassword: 1234", "Success", JOptionPane.INFORMATION_MESSAGE);
+                if (employeeManagementService.registerEmployee((IAdminOperations) currentUser, newEmp)) {
+                    String userGen = newEmp.getFirstName().substring(0, 1).toUpperCase()
+                            + newEmp.getLastName().substring(0, 1).toUpperCase()
+                            + newEmp.getLastName().substring(1).toLowerCase().replaceAll("\\s+", "");
+
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Registration Successful!\nID: " + newEmp.getEmpNo()
+                                + "\nUsername: " + userGen
+                                + "\nPassword: 1234",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+
+                    clearFormFields(
+                        fName, lName, bday, address, phone, sss, phil, tin, pagibig,
+                        basicSalaryInput, rice, pallow, cloth,
+                        genderCombo, status, posCombo, supervCombo, roleCombo
+                    );
+
+
                     
-                    clearFormFields(fName, lName, bday, address, phone, sss, phil, tin, pagibig, basicSalaryInput, rice, pallow, cloth);
-                    refreshTable(); 
-                    masterlistLayout.show(masterlistContainer, "TABLE"); 
+                    refreshTable();
+                    masterlistLayout.show(masterlistContainer, "TABLE");
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Input Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Input Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+            });
 
-        bp.add(btnBack); bp.add(btnSave);
-        wrapper.add(formTitle, BorderLayout.NORTH);
-        wrapper.add(scroll, BorderLayout.CENTER);
-        wrapper.add(bp, BorderLayout.SOUTH);
-        return wrapper;
-    }
-
-    private void clearFormFields(JTextField... fields) {
-        String[] hints = {"Juan", "Delacruz", "MM/dd/yyyy", "Address line...", "000-000-000", "00-0000000-0", "000000000000", "000-000-000-000", "000000000000", "0.00", "0", "0", "0"};
-        for (int i = 0; i < fields.length; i++) {
-            if (i < hints.length) setupPlaceholder(fields[i], hints[i]);
+            bp.add(btnBack);
+            bp.add(btnSave);
+            wrapper.add(formTitle, BorderLayout.NORTH);
+            wrapper.add(scroll, BorderLayout.CENTER);
+            wrapper.add(bp, BorderLayout.SOUTH);
+            return wrapper;
         }
-    }
 
-    private JTextField createStyledTextField(String hint) {
-        JTextField f = new JTextField(); f.setFont(bodyFont);
-        setupPlaceholder(f, hint); return f;
-    }
+        private JTextField createStyledTextField(String hint) {
+            JTextField f = new JTextField();
+            f.setFont(bodyFont);
+            setupPlaceholder(f, hint);
+            return f;
+        }
 
-    private void styleButton(JButton btn, Color bg) {
-        btn.setFont(cardTitleFont); btn.setForeground(Color.WHITE); btn.setBackground(bg);
-        btn.setOpaque(true); btn.setBorderPainted(false); btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
+        private void styleButton(JButton btn, Color bg) {
+            btn.setFont(cardTitleFont);
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(bg);
+            btn.setOpaque(true);
+            btn.setBorderPainted(false);
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
 
-    private void setupPlaceholder(JTextField field, String hint) {
-        field.setText(hint); field.setForeground(Color.GRAY);
-        field.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent e) { if (field.getText().equals(hint)) { field.setText(""); field.setForeground(Color.BLACK); } }
-           @Override
-            public void focusLost(java.awt.event.FocusEvent e) { if (field.getText().trim().isEmpty()) { field.setForeground(Color.GRAY); field.setText(hint); } }
-        });
-    }
+        private void setupPlaceholder(JTextField field, String hint) {
+            field.setText(hint);
+            field.setForeground(Color.GRAY);
 
-    private void addFormField(JPanel p, String label, JComponent f) {
-        JPanel container = new JPanel(new BorderLayout(0, 5)); container.setOpaque(false);
-        JLabel lbl = new JLabel(label); lbl.setFont(new Font("DM Sans Medium", Font.PLAIN, 11)); lbl.setForeground(Color.GRAY);
-        container.add(lbl, BorderLayout.NORTH); container.add(f, BorderLayout.CENTER); p.add(container);
-    }
-
-    public final void refreshTable() {
-        if (empTableModel == null) return;
-        SwingUtilities.invokeLater(() -> {
-            empTableModel.setRowCount(0);
-            List<Employee> list = employeeManagementService.getAll();
-            if (list != null) for (Employee emp : list) empTableModel.addRow(new Object[]{ emp.getEmpNo(), emp.getLastName(), emp.getFirstName(), emp.getStatus(), emp.getPosition(), emp.getSupervisor() });
-        });
-    }
-
-    private void applyFilters(int index, JTextField field) {
-        AbstractDocument doc = (AbstractDocument) field.getDocument();
-        switch (index) {
-            case 5: doc.setDocumentFilter(new util.MaskFormatterFilter("###-###-###")); break;
-            case 6: doc.setDocumentFilter(new util.MaskFormatterFilter("##-#######-#")); break;
-            case 7: case 9: doc.setDocumentFilter(new util.NumericLimitFilter(12)); break;
-            case 8: doc.setDocumentFilter(new util.MaskFormatterFilter("###-###-###-###")); break;
-            case 13: case 14: case 15: case 16: doc.setDocumentFilter(new util.NumericLimitFilter(7)); break;
-            case 100: doc.setDocumentFilter(new javax.swing.text.DocumentFilter() {
+            field.addFocusListener(new java.awt.event.FocusAdapter() {
                 @Override
-                public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
-                    if (text.matches("[a-zA-Z\\s]*")) super.replace(fb, offset, length, text, attrs);
+                public void focusGained(java.awt.event.FocusEvent e) {
+                    if (field.getText().equals(hint)) {
+                        field.setText("");
+                        field.setForeground(Color.BLACK);
+                    }
                 }
-            }); break;
+
+                @Override
+                public void focusLost(java.awt.event.FocusEvent e) {
+                    if (field.getText().trim().isEmpty()) {
+                        field.setForeground(Color.GRAY);
+                        field.setText(hint);
+                    }
+                }
+            });
         }
+    
+
+        private void addFormField(JPanel p, String label, JComponent f) {
+            JPanel container = new JPanel(new BorderLayout(0, 5)); container.setOpaque(false);
+            JLabel lbl = new JLabel(label); lbl.setFont(new Font("DM Sans Medium", Font.PLAIN, 11)); lbl.setForeground(Color.GRAY);
+            container.add(lbl, BorderLayout.NORTH); container.add(f, BorderLayout.CENTER); p.add(container);
+        }
+
+        public final void refreshTable() {
+            if (empTableModel == null) return;
+            SwingUtilities.invokeLater(() -> {
+                empTableModel.setRowCount(0);
+                List<Employee> list = employeeManagementService.getAll();
+                if (list != null) for (Employee emp : list) empTableModel.addRow(new Object[]{ emp.getEmpNo(), emp.getLastName(), emp.getFirstName(), emp.getStatus(), emp.getPosition(), emp.getSupervisor() });
+            });
+        }
+
+        private void applyFilters(int index, JTextField field) {
+            AbstractDocument doc = (AbstractDocument) field.getDocument();
+            switch (index) {
+                case 5: doc.setDocumentFilter(new util.MaskFormatterFilter("####-###-####")); break;
+                case 6: doc.setDocumentFilter(new util.MaskFormatterFilter("##-#######-#")); break;
+                case 7: case 9: doc.setDocumentFilter(new util.NumericLimitFilter(12)); break;
+                case 8: doc.setDocumentFilter(new util.MaskFormatterFilter("###-###-###-###")); break;
+                case 13: case 14: case 15: case 16: doc.setDocumentFilter(new util.NumericLimitFilter(7)); break;
+                case 100: doc.setDocumentFilter(new javax.swing.text.DocumentFilter() {
+                    @Override
+                    public void replace(javax.swing.text.DocumentFilter.FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
+                        if (text.matches("[a-zA-Z\\s]*")) super.replace(fb, offset, length, text, attrs);
+                    }
+                }); break;
+            }
+        }
+
+        public class DatePicker {
+            private int month, year, dayInt = 0; private JDialog d; private JButton[] button = new JButton[42];
+            public DatePicker(Component parent) {
+                Window pw = SwingUtilities.getWindowAncestor(parent); d = new JDialog(pw instanceof Frame ? (Frame)pw : null, true); d.setTitle("Select Birthdate");
+                java.util.Calendar now = java.util.Calendar.getInstance(); month = now.get(java.util.Calendar.MONTH); year = now.get(java.util.Calendar.YEAR) - 18;
+                JPanel p1 = new JPanel(new GridLayout(6, 7));
+                for (int x = 0; x < button.length; x++) {
+                    final int s = x; button[x] = new JButton();
+                    if (x < 7) { String[] h = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}; button[x].setText(h[x]); button[x].setEnabled(false); }
+                    else button[x].addActionListener(e -> { if (!button[s].getText().isEmpty()) { dayInt = Integer.parseInt(button[s].getText()); d.dispose(); } });
+                    p1.add(button[x]);
+                }
+                JComboBox<String> mc = new JComboBox<>(new String[]{"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}); mc.setSelectedIndex(month);
+                Integer[] ya = new Integer[80]; for (int i = 0; i < 80; i++) ya[i] = (now.get(java.util.Calendar.YEAR) - 18) - i;
+                JComboBox<Integer> yc = new JComboBox<>(ya);
+                mc.addActionListener(e -> { month = mc.getSelectedIndex(); displayDate(); }); yc.addActionListener(e -> { year = (Integer)yc.getSelectedItem(); displayDate(); });
+                JPanel p2 = new JPanel(); p2.add(mc); p2.add(yc); d.add(p2, BorderLayout.NORTH); d.add(p1, BorderLayout.CENTER); d.pack(); d.setLocationRelativeTo(parent);
+                displayDate(); d.setVisible(true);
+            }
+            public void displayDate() {
+                for (int x = 7; x < button.length; x++) button[x].setText("");
+                java.util.Calendar cal = java.util.Calendar.getInstance(); cal.set(year, month, 1);
+                int dw = cal.get(java.util.Calendar.DAY_OF_WEEK), dim = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
+                for (int x = 6 + dw, dn = 1; dn <= dim; x++, dn++) if (x < button.length) button[x].setText("" + dn);
+            }
+            public String setPickedDate() { if (dayInt == 0) return ""; java.util.Calendar cal = java.util.Calendar.getInstance(); cal.set(year, month, dayInt); return new java.text.SimpleDateFormat("MM/dd/yyyy").format(cal.getTime()); }
+        }
+
+
+
+        private String digitsOnly(String value) {
+        return value == null ? "" : value.replaceAll("\\D", "");
     }
 
-    public class DatePicker {
-        private int month, year, dayInt = 0; private JDialog d; private JButton[] button = new JButton[42];
-        public DatePicker(Component parent) {
-            Window pw = SwingUtilities.getWindowAncestor(parent); d = new JDialog(pw instanceof Frame ? (Frame)pw : null, true); d.setTitle("Select Birthdate");
-            java.util.Calendar now = java.util.Calendar.getInstance(); month = now.get(java.util.Calendar.MONTH); year = now.get(java.util.Calendar.YEAR) - 18;
-            JPanel p1 = new JPanel(new GridLayout(6, 7));
-            for (int x = 0; x < button.length; x++) {
-                final int s = x; button[x] = new JButton();
-                if (x < 7) { String[] h = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}; button[x].setText(h[x]); button[x].setEnabled(false); }
-                else button[x].addActionListener(e -> { if (!button[s].getText().isEmpty()) { dayInt = Integer.parseInt(button[s].getText()); d.dispose(); } });
-                p1.add(button[x]);
+    private boolean isValidPhone(String phone) {
+        String digits = digitsOnly(phone);
+        return digits.matches("09\\d{9}");
+    }
+
+    private boolean isValidSSS(String sss) {
+        return sss != null && sss.matches("\\d{2}-\\d{7}-\\d");
+    }
+
+    private boolean isValidPhilhealth(String philhealth) {
+        String digits = digitsOnly(philhealth);
+        return digits.matches("\\d{12}");
+    }
+
+    private boolean isValidTIN(String tin) {
+        String digits = digitsOnly(tin);
+        return digits.matches("\\d{12}");
+    }
+
+    private boolean isValidPagibig(String pagibig) {
+        String digits = digitsOnly(pagibig);
+        return digits.matches("\\d{12}");
+    }
+
+    private String validateRegistrationFields(
+            JTextField fName,
+            JTextField lName,
+            JTextField bday,
+            JTextField address,
+            JTextField phone,
+            JTextField sss,
+            JTextField phil,
+            JTextField tin,
+            JTextField pagibig,
+            double salaryVal) {
+
+        boolean isMissingRequired = fName.getText().trim().isEmpty() || fName.getText().equals("Juan") ||
+                                    lName.getText().trim().isEmpty() || lName.getText().equals("Delacruz") ||
+                                    bday.getText().equals("MM/dd/yyyy") ||
+                                    address.getText().trim().isEmpty() || address.getText().equals("Address line...") ||
+                                    phone.getText().trim().isEmpty() || phone.getText().equals("0917-123-4567");
+
+        boolean isMissingGov = sss.getText().equals("00-0000000-0") ||
+                            phil.getText().equals("000000000000") ||
+                            tin.getText().equals("000-000-000-000") ||
+                            pagibig.getText().equals("000000000000");
+
+            if (isMissingRequired || isMissingGov || salaryVal <= 0) {
+                return "Registration Failed:\n- All required fields (*) must be filled.\n- Monthly Basic Salary must be greater than 0.";
             }
-            JComboBox<String> mc = new JComboBox<>(new String[]{"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}); mc.setSelectedIndex(month);
-            Integer[] ya = new Integer[80]; for (int i = 0; i < 80; i++) ya[i] = (now.get(java.util.Calendar.YEAR) - 18) - i;
-            JComboBox<Integer> yc = new JComboBox<>(ya);
-            mc.addActionListener(e -> { month = mc.getSelectedIndex(); displayDate(); }); yc.addActionListener(e -> { year = (Integer)yc.getSelectedItem(); displayDate(); });
-            JPanel p2 = new JPanel(); p2.add(mc); p2.add(yc); d.add(p2, BorderLayout.NORTH); d.add(p1, BorderLayout.CENTER); d.pack(); d.setLocationRelativeTo(parent);
-            displayDate(); d.setVisible(true);
+
+            if (!isValidPhone(phone.getText().trim())) {
+                return "Invalid phone number.\nUse a valid PH mobile format like 0917-123-4567.";
+            }
+
+            if (!isValidSSS(sss.getText().trim())) {
+                return "Invalid SSS number.\nExpected format: 12-1234567-1";
+            }
+
+            if (!isValidPhilhealth(phil.getText().trim())) {
+                return "Invalid PhilHealth number.\nIt must contain exactly 12 digits.";
+            }
+
+            if (!isValidTIN(tin.getText().trim())) {
+                return "Invalid TIN.\nExpected 12 digits, e.g. 123-456-789-000";
+            }
+
+            if (!isValidPagibig(pagibig.getText().trim())) {
+                return "Invalid Pag-IBIG number.\nIt must contain exactly 12 digits.";
+            }
+
+            return null;
         }
-        public void displayDate() {
-            for (int x = 7; x < button.length; x++) button[x].setText("");
-            java.util.Calendar cal = java.util.Calendar.getInstance(); cal.set(year, month, 1);
-            int dw = cal.get(java.util.Calendar.DAY_OF_WEEK), dim = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
-            for (int x = 6 + dw, dn = 1; dn <= dim; x++, dn++) if (x < button.length) button[x].setText("" + dn);
+
+
+    private void clearFormFields(
+            JTextField fName,
+            JTextField lName,
+            JTextField bday,
+            JTextField address,
+            JTextField phone,
+            JTextField sss,
+            JTextField phil,
+            JTextField tin,
+            JTextField pagibig,
+            JTextField basicSalaryInput,
+            JTextField rice,
+            JTextField pallow,
+            JTextField cloth,
+            JComboBox<String> genderCombo,
+            JComboBox<String> statusCombo,
+            JComboBox<String> posCombo,
+            JComboBox<String> supervCombo,
+            JComboBox<String> roleCombo
+    ) {
+        fName.setText("Juan"); fName.setForeground(Color.GRAY);
+        lName.setText("Delacruz"); lName.setForeground(Color.GRAY);
+        bday.setText("MM/dd/yyyy"); bday.setForeground(Color.GRAY);
+        address.setText("Address line..."); address.setForeground(Color.GRAY);
+        phone.setText("0917-123-4567"); phone.setForeground(Color.GRAY);
+
+        sss.setText("00-0000000-0"); sss.setForeground(Color.GRAY);
+        phil.setText("000000000000"); phil.setForeground(Color.GRAY);
+        tin.setText("000-000-000-000"); tin.setForeground(Color.GRAY);
+        pagibig.setText("000000000000"); pagibig.setForeground(Color.GRAY);
+
+        basicSalaryInput.setText("0");
+        basicSalaryInput.setForeground(Color.GRAY);
+
+        genderCombo.setSelectedIndex(0);
+        statusCombo.setSelectedIndex(0);
+        posCombo.setSelectedIndex(0);
+        updatePositionDefaults(posCombo, statusCombo, supervCombo, rice, pallow, cloth);
+        updateRoleOptionsForPosition(posCombo, roleCombo);
+    }
+
+
+    private void updatePositionDefaults(
+            JComboBox<String> posCombo,
+            JComboBox<String> statusCombo,
+            JComboBox<String> supervCombo,
+            JTextField rice,
+            JTextField pallow,
+            JTextField cloth
+    ) {
+        String selectedPos = (String) posCombo.getSelectedItem();
+        String selectedStatus = (String) statusCombo.getSelectedItem();
+
+        if (selectedPos == null) return;
+
+        String[] available = employeeManagementService.getSupervisorsForPosition(selectedPos);
+        supervCombo.removeAllItems();
+        for (String s : available) {
+            supervCombo.addItem(s);
         }
-        public String setPickedDate() { if (dayInt == 0) return ""; java.util.Calendar cal = java.util.Calendar.getInstance(); cal.set(year, month, dayInt); return new java.text.SimpleDateFormat("MM/dd/yyyy").format(cal.getTime()); }
+
+        if ("Probationary".equalsIgnoreCase(selectedStatus)) {
+            rice.setText("0");
+            pallow.setText("0");
+            cloth.setText("0");
+        } else {
+            double[] allowances = employeeManagementService.getStandardAllowances(selectedPos);
+            rice.setText(String.format("%.0f", allowances[0]));
+            pallow.setText(String.format("%.0f", allowances[1]));
+            cloth.setText(String.format("%.0f", allowances[2]));
+        }
+
+        rice.setForeground(Color.BLACK);
+        pallow.setForeground(Color.BLACK);
+        cloth.setForeground(Color.BLACK);
+    }
+
+
+    private void updateRoleOptionsForPosition(
+        JComboBox<String> posCombo,
+        JComboBox<String> roleCombo
+    ) {
+        String selectedPos = (String) posCombo.getSelectedItem();
+        if (selectedPos == null) return;
+
+        model.Role matchedRole = model.Role.fromString(selectedPos);
+
+        roleCombo.removeAllItems();
+        roleCombo.addItem(matchedRole.getLabel());
+        roleCombo.setSelectedItem(matchedRole.getLabel());
+        roleCombo.setEnabled(false);
     }
 }

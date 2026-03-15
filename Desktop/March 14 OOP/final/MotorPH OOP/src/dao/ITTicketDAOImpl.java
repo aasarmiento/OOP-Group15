@@ -6,7 +6,7 @@ import java.util.List;
 import model.ITTicket;
 
 public class ITTicketDAOImpl implements ITTicketDao {
-    private static final String FILE_PATH = "resources/MotorPH_ITTickets.csv";
+    private static final String FILE_PATH = "./resources/MotorPH_ITTickets.csv";
     private static final String HEADER = "ID,EmpNo,User,Name,Type,Desc,Status,Created,ResolvedAt,ResolvedBy";
 
     @Override

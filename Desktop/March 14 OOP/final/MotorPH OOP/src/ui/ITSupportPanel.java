@@ -10,6 +10,7 @@ import model.Employee;
 import model.ITTicket;
 import service.ITSupportService;
 
+// Updated to extend BasePanel
 public class ITSupportPanel extends BasePanel {
     private final ITSupportService itService;
     private final Employee currentUser;
@@ -32,10 +33,11 @@ public class ITSupportPanel extends BasePanel {
     private final String[] cols = {"ID", "Emp No", "Username", "Type", "Status", "Created", "Resolved By", "Description"};
 
     public ITSupportPanel(ITSupportService itService, Employee user) {
-        super(); 
+        super(); // Initializes BasePanel background and layout
         this.itService = itService;
         this.currentUser = user;
         
+        // BasePanel already sets BorderLayout and Background
         setBorder(new EmptyBorder(25, 40, 25, 40));
         
         model = new DefaultTableModel(cols, 0) {
